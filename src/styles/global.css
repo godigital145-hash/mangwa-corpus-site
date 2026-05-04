@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Karma:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+.body {
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+}
+
+.inter {
+    font-family: "Inter", sans-serif;
+}
+
+.karma {
+    font-family: "Karma", serif;
+    line-height: 1.12;
+}
