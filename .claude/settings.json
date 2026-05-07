@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs=require('fs');const c=fs.readFileSync('AGENTS.md','utf8');console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'SessionStart',additionalContext:'## CMS (@geniusofdigital/astro-cms)\\n\\n'+c}}))\"",
+            "statusMessage": "Chargement de la documentation CMS..."
+          }
+        ]
+      }
+    ]
+  }
+}
