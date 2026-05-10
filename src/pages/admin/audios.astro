@@ -1,0 +1,10 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import AdminAudios from "../../Componant/admin/AdminAudios";
+
+const token = Astro.cookies.get("admin_token")?.value ?? "";
+---
+
+<AdminLayout title="Audios" active="audios">
+  <AdminAudios token={token} client:load />
+</AdminLayout>

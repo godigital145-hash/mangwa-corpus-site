@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Container from "./Container";
 import logo from "../assets/logo.png"
+import { RiShoppingBasketFill, RiUser6Fill } from "./icons";
 
 const ChevronDown = () => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -114,19 +115,16 @@ export default function Header() {
           </div>
 
           {/* Right side: icons + burger */}
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-6 shrink-0">
             {/* Icône recherche visible uniquement sur mobile */}
             <button className="md:hidden hover:opacity-70 transition-opacity" aria-label="Recherche">
               <SearchIcon />
             </button>
-            <button className="hover:opacity-70 transition-opacity" aria-label="Favoris">
-              <HeartIcon />
-            </button>
             <button className="hover:opacity-70 transition-opacity" aria-label="Panier">
-              <CartIcon />
+              <RiShoppingBasketFill className="w-8 h-8" />
             </button>
             <button className="hover:opacity-70 transition-opacity hidden sm:block" aria-label="Compte">
-              <UserIcon />
+              <RiUser6Fill className="w-8 h-8" />
             </button>
             {/* Burger — visible uniquement sous lg */}
             <button
@@ -209,7 +207,7 @@ export default function Header() {
             className="flex items-center gap-3 px-6 py-4 text-[14px] text-gray-800 font-medium sm:hidden"
             onClick={() => setMenuOpen(false)}
           >
-            <UserIcon />
+            <RiUser6Fill className="w-8 h-8" />
             Mon compte
           </a>
         </div>

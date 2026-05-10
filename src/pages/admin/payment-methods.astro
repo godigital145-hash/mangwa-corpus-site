@@ -1,0 +1,10 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import AdminPaymentMethods from "../../Componant/admin/AdminPaymentMethods";
+
+const token = Astro.cookies.get("admin_token")?.value ?? "";
+---
+
+<AdminLayout title="Méthodes de paiement" active="payment-methods">
+  <AdminPaymentMethods token={token} client:load />
+</AdminLayout>

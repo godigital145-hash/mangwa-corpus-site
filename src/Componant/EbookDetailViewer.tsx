@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { books } from "../data/books";
+import { api, mediaUrl, type Magazine } from "../lib/api";
 
 const MAX_PREVIEW_PAGES = 5;
 
@@ -27,7 +27,6 @@ const LockIcon = () => (
   </svg>
 );
 
-// Loaded lazily client-side to avoid Node.js DOMMatrix error during SSR build
 type PdfComponents = {
   Document: React.ComponentType<any>;
   Page: React.ComponentType<any>;
@@ -43,7 +42,6 @@ function PdfViewer({ url }: { url: string }) {
     if (node) setContainerWidth(node.getBoundingClientRect().width);
   }, []);
 
-  // Dynamic import — runs only in the browser, never during Astro's Node.js build
   useEffect(() => {
     import("react-pdf").then((mod) => {
       mod.pdfjs.GlobalWorkerOptions.workerSrc =
@@ -70,7 +68,6 @@ function PdfViewer({ url }: { url: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Viewer */}
       <div
         ref={containerRef}
         className="relative w-full bg-[#f0f0f0] flex items-center justify-center min-h-96 rounded overflow-hidden"
@@ -93,12 +90,9 @@ function PdfViewer({ url }: { url: string }) {
           />
         </Document>
 
-        {/* Overlay de verrouillage après la page MAX */}
         {isLocked && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-white/90 backdrop-blur-sm">
-            <div className="text-[#00bcd4]">
-              <LockIcon />
-            </div>
+            <div className="text-[#00bcd4]"><LockIcon /></div>
             <div className="text-center px-6">
               <p className="text-gray-900 font-bold text-[18px]">Aperçu terminé</p>
               <p className="text-gray-500 text-[14px] mt-1">
@@ -115,7 +109,6 @@ function PdfViewer({ url }: { url: string }) {
         )}
       </div>
 
-      {/* Navigation */}
       {numPages > 0 && (
         <div className="flex items-center justify-between">
           <button
@@ -125,7 +118,6 @@ function PdfViewer({ url }: { url: string }) {
           >
             <ChevronLeft /> Précédent
           </button>
-
           <div className="text-center">
             <p className="text-gray-900 font-semibold text-[14px]">
               Page {currentPage} / {previewTotal}
@@ -136,7 +128,6 @@ function PdfViewer({ url }: { url: string }) {
               </p>
             )}
           </div>
-
           <button
             onClick={() => setCurrentPage((p) => Math.min(previewTotal, p + 1))}
             disabled={currentPage >= previewTotal}
@@ -164,8 +155,53 @@ function NoPdfPlaceholder() {
 }
 
 export default function EbookDetailViewer({ id }: { id: string }) {
-  const book = books.find((b) => b.id === id);
-  if (!book) return null;
+  const [mag, setMag] = useState<Magazine | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    api.magazine(Number(id))
+      .then((data) => {
+        if (!data || (data as any).error) {
+          setNotFound(true);
+        } else {
+          setMag(data);
+        }
+      })
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-8 py-8 animate-pulse">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="bg-gray-100 aspect-3/4" />
+          <div className="lg:col-span-3 flex flex-col gap-4">
+            <div className="h-4 bg-gray-100 rounded w-24" />
+            <div className="h-10 bg-gray-100 rounded w-2/3" />
+            <div className="h-4 bg-gray-100 rounded w-full" />
+            <div className="h-4 bg-gray-100 rounded w-4/5" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !mag) {
+    return (
+      <div className="py-16 text-center text-gray-400">
+        <p className="text-[18px] font-medium">Magazine introuvable</p>
+        <a href="/ebook" className="text-[#00bcd4] text-[14px] mt-2 inline-block hover:underline">
+          ← Retour aux E-Books
+        </a>
+      </div>
+    );
+  }
+
+  const coverUrl = mediaUrl(mag.cover);
+  const pdfPreviewUrl = mag.pdf_preview ? mediaUrl(mag.pdf_preview) : null;
+  const pdfFileUrl = mag.pdf_file ? mediaUrl(mag.pdf_file) : null;
 
   return (
     <div className="flex flex-col gap-12 py-8">
@@ -175,74 +211,68 @@ export default function EbookDetailViewer({ id }: { id: string }) {
 
         {/* Couverture */}
         <div className="lg:col-span-1 bg-gray-100 aspect-3/4 flex items-center justify-center px-8 py-10">
-          <img
-            src={book.coverUrl}
-            alt={book.titre}
-            className="w-full h-full object-contain"
-          />
+          {coverUrl
+            ? <img src={coverUrl} alt={mag.title} className="w-full h-full object-contain" />
+            : <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-sm">Pas de couverture</div>
+          }
         </div>
 
         {/* Détails */}
         <div className="lg:col-span-3 flex flex-col gap-5">
-          {/* Badge */}
           <span className="inline-block text-[11px] text-[#00bcd4] uppercase tracking-widest font-semibold">
-            {book.type === "magazine" ? "Magazine" : "Livre"}
-            {book.annee ? ` · ${book.annee}` : ""}
-            {book.pages ? ` · ${book.pages} pages` : ""}
+            Magazine
+            {mag.published_at ? ` · ${new Date(mag.published_at).getFullYear()}` : ""}
+            {mag.pages ? ` · ${mag.pages} pages` : ""}
           </span>
 
-          {/* Titre */}
           <div>
             <h1 className="text-[28px] sm:text-[36px] font-extrabold text-gray-900 uppercase leading-tight">
-              {book.titre}
+              {mag.title}
             </h1>
-            {book.auteur && (
-              <p className="text-gray-500 text-[16px] mt-1">{book.auteur}</p>
+            {mag.subtitle && (
+              <p className="text-gray-500 text-[16px] mt-1">{mag.subtitle}</p>
             )}
           </div>
 
-          {book.description && (
-            <p className="text-[18px] text-gray-700 font-medium">{book.description}</p>
-          )}
-          {book.resume && (
-            <p className="text-[15px] text-gray-500 leading-relaxed">{book.resume}</p>
+          {mag.description && (
+            <p className="text-[15px] text-gray-500 leading-relaxed">{mag.description}</p>
           )}
 
-          {/* Autres articles */}
-          {book.autres && book.autres.length > 0 && (
-            <div>
-              <p className="text-[11px] text-gray-400 uppercase tracking-widest font-medium mb-3">
-                Aussi dans ce numéro
-              </p>
-              <ul className="flex flex-col gap-2">
-                {book.autres.map((a, i) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="text-[#00bcd4] font-bold">·</span>
-                    <div>
-                      <span className="text-[14px] font-semibold text-gray-800">{a.nom}</span>
-                      <span className="text-[14px] text-gray-500"> — {a.description}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Méta */}
+          <ul className="flex flex-col gap-1.5 text-[14px] text-gray-600">
+            {mag.category && <li><span className="font-semibold">Catégorie :</span> {mag.category}</li>}
+            {mag.issue_number && <li><span className="font-semibold">Numéro :</span> #{mag.issue_number}</li>}
+            {mag.published_at && <li><span className="font-semibold">Date :</span> {new Date(mag.published_at).toLocaleDateString("fr-FR")}</li>}
+            {mag.price != null && <li><span className="font-semibold">Prix :</span> {mag.price.toLocaleString("fr-FR")} XAF</li>}
+          </ul>
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-3 mt-2">
-            <a
-              href="#extrait"
-              className="flex items-center justify-center bg-[#00bcd4] hover:bg-[#00acc1] transition-colors text-white text-[14px] font-bold px-6 py-3"
-            >
-              Lire l'extrait
-            </a>
-            <a
-              href="#"
-              download
-              className="flex items-center justify-center gap-2 bg-[#6dbe6d] hover:bg-[#5cb85c] transition-colors text-white text-[14px] font-bold px-6 py-3"
-            >
-              Télécharger <DownloadIcon />
-            </a>
+          <div className="flex flex-wrap items-center gap-3 mt-2">
+            {pdfPreviewUrl && (
+              <a
+                href="#extrait"
+                className="flex items-center justify-center bg-[#00bcd4] hover:bg-[#00acc1] transition-colors text-white text-[14px] font-bold px-6 py-3"
+              >
+                Lire l'extrait
+              </a>
+            )}
+            {pdfFileUrl && (
+              <a
+                href={pdfFileUrl}
+                target="_blank"
+                className="flex items-center justify-center gap-2 bg-[#6dbe6d] hover:bg-[#5cb85c] transition-colors text-white text-[14px] font-bold px-6 py-3"
+              >
+                <span className="px-3 py-3">
+                  Téléchargement
+                </span>
+                <span className="px-3 py-3 bg-black/10">
+                  {mag.price != null ? `${mag.price.toLocaleString("fr-FR")} XAF` : "(Gratuit)"}
+                </span>
+              </a>
+            )}
+            <span>
+              Paiement sécurisé
+            </span>
           </div>
         </div>
       </div>
@@ -255,12 +285,11 @@ export default function EbookDetailViewer({ id }: { id: string }) {
             {MAX_PREVIEW_PAGES} premières pages
           </span>
         </div>
-        {book.pdfUrl
-          ? <PdfViewer url={book.pdfUrl} />
+        {pdfPreviewUrl
+          ? <PdfViewer url={pdfPreviewUrl} />
           : <NoPdfPlaceholder />
         }
       </div>
-
     </div>
   );
 }

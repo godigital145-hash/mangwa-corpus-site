@@ -10,6 +10,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "types": ["@cloudflare/workers-types"]
+    "moduleResolution": "bundler",
+    "types": ["@types/node", "@cloudflare/workers-types"]
   }
 }

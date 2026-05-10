@@ -38,6 +38,7 @@ class AudioEngine {
   }
 
   async loadTrack(audioUrl: string, meta: TrackMeta) {
+    console.log("loadTrack", audioUrl);
     if (this.currentAudioUrl === audioUrl) return;
 
     this.stopSource();

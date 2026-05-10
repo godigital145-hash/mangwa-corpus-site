@@ -4,9 +4,11 @@ import { audioEngine } from "../utils/audioEngine";
 import { useAudioWaveform } from "../hooks/useAudioWaveform";
 import { FluentMusicNote124Filled } from "./SectionAudio";
 import { FluentPlay32Filled, FluentPause32Filled } from "./ListeAudio";
-import { tracks } from "../data/tracks";
+import { api, mediaUrl, type Audio } from "../lib/api";
 
 const BAR_COUNT = 237;
+
+type LyricLine = { time: number; text: string };
 
 function formatTime(s: number) {
   const m = Math.floor(s / 60);
@@ -56,13 +58,24 @@ function Waveform({ audioUrl, progress, onSeek }: { audioUrl: string; progress: 
   );
 }
 
-function LyricsPanel({ lyrics, currentTime }: { lyrics: { time: number; text: string }[]; currentTime: number }) {
-  const activeIndex = lyrics.reduce((acc, line, i) => (currentTime >= line.time ? i : acc), 0);
+function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[]; currentTime: number }) {
+  const timed = lyrics.some((l) => l.time > 0);
+  const activeIndex = timed
+    ? lyrics.reduce((acc, line, i) => (currentTime >= line.time ? i : acc), 0)
+    : -1;
   const activeRef = useRef<HTMLParagraphElement | null>(null);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [activeIndex]);
+
+  if (lyrics.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+        Aucune parole disponible
+      </div>
+    );
+  }
 
   return (
     <div className="h-full overflow-y-auto flex flex-col gap-3 py-4 pr-2 scrollbar-thin scrollbar-thumb-gray-300">
@@ -89,17 +102,19 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: { time: number; text: st
 }
 
 function AlbumTracklist({
+  tracks,
   activeId,
   playing,
   onSelect,
 }: {
-  activeId: string;
+  tracks: Audio[];
+  activeId: number;
   playing: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: number) => void;
 }) {
   return (
-    <div className="w-full bg-[#161616] border-t border-white/5">
-      <div className="px-6 sm:px-10 py-5">
+    <div className="w-full bg-transparent">
+      <div className="py-5">
         <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-3">
           Pistes de l'album
         </p>
@@ -115,7 +130,6 @@ function AlbumTracklist({
                 onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
                 onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
               >
-                {/* Index / play icon */}
                 <span className="w-5 text-center text-[12px] shrink-0">
                   {isActive && playing
                     ? <FluentPause32Filled className="h-3 w-3 text-[#00bcd4] inline" />
@@ -124,17 +138,15 @@ function AlbumTracklist({
                       : <span className="text-gray-600">{i + 1}</span>
                   }
                 </span>
-
-                {/* Title + artist */}
                 <div className="flex-1 min-w-0">
                   <p
                     className="text-[13px] font-medium truncate transition-colors"
                     style={{ color: isActive ? "#00bcd4" : "#d1d5db" }}
                   >
-                    {track.titre}
+                    {track.title}
                   </p>
-                  {track.artiste && (
-                    <p className="text-[11px] text-gray-500 truncate">{track.artiste}</p>
+                  {track.artist && (
+                    <p className="text-[11px] text-gray-500 truncate">{track.artist}</p>
                   )}
                 </div>
               </button>
@@ -146,48 +158,73 @@ function AlbumTracklist({
   );
 }
 
+async function fetchLyrics(lyricsKey: string | null): Promise<LyricLine[]> {
+  if (!lyricsKey) return [];
+  const url = mediaUrl(lyricsKey);
+  if (!url) return [];
+  try {
+    const text = await fetch(url).then((r) => r.text());
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text.split("\n").filter(Boolean).map((line) => ({ time: 0, text: line }));
+    }
+  } catch {
+    return [];
+  }
+}
+
 export default function AudioItemPlayer({ id }: { id: string }) {
-  const [activeId, setActiveId] = useState(id);
+  const [allAudios, setAllAudios] = useState<Audio[]>([]);
+  const [activeId, setActiveId] = useState(Number(id));
+  const [lyrics, setLyrics] = useState<LyricLine[]>([]);
+  const [loading, setLoading] = useState(true);
   const isFirstMount = useRef(true);
   const engine = useAudioEngine();
 
-  const track = tracks.find((t) => t.id === activeId) || tracks[0];
+  const audio = allAudios.find((a) => a.id === activeId) ?? null;
+  const audioUrl = audio?.audio_file ? (mediaUrl(audio.audio_file) ?? "") : "";
+  const coverUrl = audio?.cover ? mediaUrl(audio.cover) : null;
 
-  // Load on mount; auto-play only when switching tracks
+  // Load all audios once
   useEffect(() => {
+    api.audios()
+      .then(setAllAudios)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Load audio engine + lyrics when active audio changes
+  useEffect(() => {
+    if (!audio || !audioUrl) return;
     if (isFirstMount.current) {
       isFirstMount.current = false;
-      audioEngine.loadTrack(track.audioUrl, {
-        id: track.id,
-        titre: track.titre,
-        artiste: track.artiste,
-      });
+      audioEngine.loadTrack(audioUrl, { id: String(audio.id), titre: audio.title, artiste: audio.artist });
     } else {
-      audioEngine.loadTrack(track.audioUrl, {
-        id: track.id,
-        titre: track.titre,
-        artiste: track.artiste,
-      }).then(() => audioEngine.play());
+      audioEngine.loadTrack(audioUrl, { id: String(audio.id), titre: audio.title, artiste: audio.artist })
+        .then(() => audioEngine.play());
       window.history.pushState(null, "", `/audioitem/${activeId}`);
     }
-  }, [activeId]);
+    fetchLyrics(audio.lyrics).then(setLyrics);
+  }, [activeId, audio?.id]);
 
-  const isThisTrack = engine.currentAudioUrl === track.audioUrl;
+  const isThisTrack = engine.currentAudioUrl === audioUrl;
   const playing = isThisTrack && engine.playing;
   const progress = isThisTrack ? engine.progress : 0;
   const currentTime = isThisTrack ? engine.currentTime : 0;
   const duration = isThisTrack ? engine.duration : 0;
 
   const handleToggle = () => {
+    if (!audioUrl) return;
     if (!isThisTrack) {
-      audioEngine.loadTrack(track.audioUrl, { id: track.id, titre: track.titre, artiste: track.artiste })
+      audioEngine.loadTrack(audioUrl, { id: String(audio!.id), titre: audio!.title, artiste: audio!.artist })
         .then(() => audioEngine.play());
     } else {
       audioEngine.toggle();
     }
   };
 
-  const handleTrackSelect = (newId: string) => {
+  const handleTrackSelect = (newId: number) => {
     if (newId === activeId) {
       audioEngine.toggle();
     } else {
@@ -199,10 +236,22 @@ export default function AudioItemPlayer({ id }: { id: string }) {
     if (isThisTrack) audioEngine.seek(ratio);
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="h-[400px] bg-[#1c1c1c] animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!audio) {
+    return (
+      <div className="py-12 text-center text-gray-400">Audio introuvable.</div>
+    );
+  }
+
   return (
     <div className="flex flex-col w-full">
-
-      {/* Main two-panel player */}
       <div className="flex flex-col lg:flex-row gap-0 w-full min-h-150">
 
         {/* Panneau gauche — Player */}
@@ -211,19 +260,19 @@ export default function AudioItemPlayer({ id }: { id: string }) {
           {/* Thumbnail + infos */}
           <div className="flex items-center gap-5">
             <div className="w-20 h-20 sm:w-24 sm:h-24 bg-[#111] flex items-center justify-center shrink-0">
-              {track.coverUrl
-                ? <img src={track.coverUrl} alt={track.titre} className="w-full h-full object-cover" />
+              {coverUrl
+                ? <img src={coverUrl} alt={audio.title} className="w-full h-full object-cover" />
                 : <FluentMusicNote124Filled className="w-12 h-12 text-gray-600" />
               }
             </div>
             <div>
-              <h2 className="text-white font-extrabold text-[20px] sm:text-[24px] leading-tight">{track.titre}</h2>
-              {track.artiste && <p className="text-gray-400 text-[14px] mt-1">{track.artiste}</p>}
+              <h2 className="text-white font-extrabold text-[20px] sm:text-[24px] leading-tight">{audio.title}</h2>
+              {audio.artist && <p className="text-gray-400 text-[14px] mt-1">{audio.artist}</p>}
             </div>
           </div>
 
           {/* Waveform */}
-          <Waveform audioUrl={track.audioUrl} progress={progress} onSeek={seek} />
+          {audioUrl && <Waveform audioUrl={audioUrl} progress={progress} onSeek={seek} />}
 
           {/* Progress bar + temps */}
           <div className="flex flex-col gap-2">
@@ -258,14 +307,18 @@ export default function AudioItemPlayer({ id }: { id: string }) {
               }
             </button>
 
-            <a
-              href={track.audioUrl}
-              download
-              className="flex items-center gap-2 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[13px] font-bold px-5 py-2.5"
-            >
-              Télécharger <DownloadIcon />
-            </a>
+            {audioUrl && (
+              <a
+                href={audioUrl}
+                download
+                className="flex items-center gap-2 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[13px] font-bold px-5 py-2.5"
+              >
+                Télécharger <DownloadIcon />
+              </a>
+            )}
           </div>
+          {/* Album tracklist */}
+          <AlbumTracklist tracks={allAudios} activeId={activeId} playing={playing} onSelect={handleTrackSelect} />
         </div>
 
         {/* Panneau droit — Lyrics */}
@@ -276,12 +329,12 @@ export default function AudioItemPlayer({ id }: { id: string }) {
           <h3 className="text-[13px] text-gray-400 uppercase tracking-widest font-medium mb-4 shrink-0">
             Paroles
           </h3>
-          <LyricsPanel lyrics={track.lyrics} currentTime={currentTime} />
+          <LyricsPanel lyrics={lyrics} currentTime={currentTime} />
         </div>
       </div>
 
-      {/* Album tracklist */}
-      <AlbumTracklist activeId={activeId} playing={playing} onSelect={handleTrackSelect} />
+      {/* Album tracklist
+      <AlbumTracklist tracks={allAudios} activeId={activeId} playing={playing} onSelect={handleTrackSelect} /> */}
     </div>
   );
 }

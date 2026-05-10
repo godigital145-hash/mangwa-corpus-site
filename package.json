@@ -7,25 +7,22 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "dev:all": "concurrently -n \"front,serveur\" -c \"cyan,magenta\" \"astro dev\" \"npm run dev --prefix serveur\"",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
-    "deploy": "astro build && wrangler pages deploy",
-    "cf:d1:create": "wrangler d1 create mangwa-corpus-db",
-    "cf:d1:migrate": "wrangler d1 execute mangwa-corpus-db --file=./migrations/init.sql",
-    "cf:r2:create": "wrangler r2 bucket create mangwa-corpus-media",
-    "cf:kv:create": "wrangler kv namespace create CACHE",
-    "cf:secret": "wrangler secret put ADMIN_PASSWORD",
-    "cf:tail": "wrangler pages deployment tail"
+    "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/node": "^10.1.0",
     "@astrojs/react": "^5.0.4",
-    "@geniusofdigital/astro-cms": "^0.1.28",
     "@nanostores/react": "^1.1.0",
     "@tailwindcss/vite": "^4.2.4",
+    "@tiptap/extension-placeholder": "^3.22.5",
+    "@tiptap/react": "^3.22.5",
+    "@tiptap/starter-kit": "^3.22.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "astro": "^6.2.1",
+    "astro": "^6.3.1",
     "nanostores": "^1.3.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
@@ -33,8 +30,6 @@
     "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
-    "@astrojs/cloudflare": "^13.3.1",
-    "@cloudflare/workers-types": "^4.20260506.1",
-    "wrangler": "^4.88.0"
+    "concurrently": "^9.2.1"
   }
 }

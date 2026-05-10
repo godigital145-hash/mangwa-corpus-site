@@ -1,0 +1,10 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import AdminVideos from "../../Componant/admin/AdminVideos";
+
+const token = Astro.cookies.get("admin_token")?.value ?? "";
+---
+
+<AdminLayout title="Vidéos" active="videos">
+  <AdminVideos token={token} client:load />
+</AdminLayout>

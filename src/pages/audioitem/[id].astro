@@ -4,16 +4,9 @@ import Header from "../../Componant/Header";
 import Footer from "../../Componant/Footer";
 import Container from "../../Componant/Container";
 import AudioItemPlayer from "../../Componant/AudioItemPlayer";
-import { tracks } from "../../data/tracks";
 
-export function getStaticPaths() {
-  return tracks.map((track) => ({
-    params: { id: track.id },
-    props: { track },
-  }));
-}
-
-const { track } = Astro.props;
+const { id } = Astro.params;
+if (!id) return Astro.redirect("/audio");
 ---
 
 <Layout>
@@ -24,10 +17,10 @@ const { track } = Astro.props;
       <nav class="flex items-center gap-2 text-[13px] text-gray-400 mb-6">
         <a href="/audio" class="hover:text-gray-700 transition-colors">Audios</a>
         <span>/</span>
-        <span class="text-gray-700 font-medium">{track.titre}</span>
+        <span class="text-gray-700 font-medium">Lecture</span>
       </nav>
 
-      <AudioItemPlayer client:load id={track.id} />
+      <AudioItemPlayer client:load id={id} />
     </div>
   </Container>
 

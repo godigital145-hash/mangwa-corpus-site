@@ -4,16 +4,9 @@ import Header from "../../Componant/Header";
 import Footer from "../../Componant/Footer";
 import Container from "../../Componant/Container";
 import EbookDetailViewer from "../../Componant/EbookDetailViewer";
-import { books } from "../../data/books";
 
-export function getStaticPaths() {
-  return books.map((book) => ({
-    params: { id: book.id },
-    props: { book },
-  }));
-}
-
-const { book } = Astro.props;
+const { id } = Astro.params;
+if (!id) return Astro.redirect("/ebook");
 ---
 
 <Layout>
@@ -23,10 +16,10 @@ const { book } = Astro.props;
     <nav class="flex items-center gap-2 text-[13px] text-gray-400 mt-6 mb-2">
       <a href="/ebook" class="hover:text-gray-700 transition-colors">E-Book</a>
       <span>/</span>
-      <span class="text-gray-700 font-medium">{book.titre}</span>
+      <span class="text-gray-700 font-medium">Détail</span>
     </nav>
 
-    <EbookDetailViewer client:load id={book.id} />
+    <EbookDetailViewer client:load id={id} />
   </Container>
 
   <Footer client:load />

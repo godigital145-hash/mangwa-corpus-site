@@ -1,10 +1,11 @@
+import { useState, useEffect } from "react";
 import type { SVGProps } from "react";
 import Container from "./Container";
 import { FluentMusicNote124Filled } from "./SectionAudio";
 import { useAudioWaveform } from "../hooks/useAudioWaveform";
 import { useAudioEngine } from "../hooks/useAudioEngine";
 import { audioEngine } from "../utils/audioEngine";
-import { tracks } from "../data/tracks";
+import { api, mediaUrl, type Audio } from "../lib/api";
 
 export function FluentPlay32Filled(props: SVGProps<SVGSVGElement>) {
   return (
@@ -85,7 +86,7 @@ function Waveform({
   );
 }
 
-function TrackRow({ id, titre, artiste, audioUrl }: { id: string; titre: string; artiste: string; audioUrl: string }) {
+function TrackRow({ id, titre, artiste, audioUrl, coverUrl }: { id: string; titre: string; artiste: string; audioUrl: string; coverUrl?: string | null }) {
   const engine = useAudioEngine();
   const isThisTrack = engine.currentAudioUrl === audioUrl;
   const playing = isThisTrack && engine.playing;
@@ -108,8 +109,11 @@ function TrackRow({ id, titre, artiste, audioUrl }: { id: string; titre: string;
   return (
     <div className="bg-[#1c1c1c] overflow-hidden grid lg:grid-cols-5">
       {/* Thumbnail */}
-      <div className="w-22.5 sm:w-full shrink-0 bg-[#111] flex items-center justify-center aspect-square">
-        <FluentMusicNote124Filled className="w-25 h-25 text-gray-600" />
+      <div className="w-22.5 sm:w-full shrink-0 bg-[#111] flex items-center justify-center aspect-square overflow-hidden">
+        {coverUrl
+          ? <img src={coverUrl} alt={titre} className="w-full h-full object-cover" />
+          : <FluentMusicNote124Filled className="w-25 h-25 text-gray-600" />
+        }
       </div>
 
       <div className="col-span-4 flex">
@@ -177,15 +181,36 @@ function TrackRow({ id, titre, artiste, audioUrl }: { id: string; titre: string;
 }
 
 export default function ListeAudio() {
+  const [audios, setAudios] = useState<Audio[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.audios().then(setAudios).catch(console.error).finally(() => setLoading(false));
+  }, []);
+
   return (
     <section className="w-full mt-8">
       <Container>
         <p className="text-[13px] text-gray-500 uppercase tracking-widest font-medium mb-4">
           Derniere sortie
         </p>
+        {loading && (
+          <div className="flex flex-col gap-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-[#1c1c1c] h-40 animate-pulse" />
+            ))}
+          </div>
+        )}
         <div className="flex flex-col gap-3">
-          {tracks.map((track) => (
-            <TrackRow key={track.id} {...track} />
+          {audios.map((audio) => (
+            <TrackRow
+              key={audio.id}
+              id={String(audio.id)}
+              titre={audio.title}
+              artiste={audio.artist}
+              audioUrl={mediaUrl(audio.audio_file) ?? ''}
+              coverUrl={mediaUrl(audio.cover)}
+            />
           ))}
         </div>
       </Container>

@@ -16,14 +16,15 @@ export default function StickyPlayer() {
 
   const { titre, artiste, coverUrl } = engine.currentTrack;
   const { playing, progress, currentTime, duration } = engine;
+  console.log(engine);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#1c1c1c] border-t border-white/10 shadow-2xl">
       <div className="flex items-center gap-4 px-4 py-3 max-w-screen-xl mx-auto">
         {/* Cover */}
         <div className="w-10 h-10 bg-[#111] flex items-center justify-center shrink-0">
-          {coverUrl
-            ? <img src={coverUrl} alt={titre} className="w-full h-full object-cover" />
+          {engine.currentAudioUrl
+            ? <img src={engine.currentAudioUrl as string} alt={titre} className="w-full h-full object-cover" />
             : <FluentMusicNote124Filled className="w-5 h-5 text-gray-600" />
           }
         </div>

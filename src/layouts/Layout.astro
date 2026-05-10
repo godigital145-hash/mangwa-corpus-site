@@ -15,9 +15,9 @@ import StickyPlayer from "../Componant/StickyPlayer";
 		<title>Mangwa Corpus</title>
 		<ClientRouter />
 	</head>
-	<body class="pb-20">
+	<body>
 		<slot />
-		<div transition:persist="sticky-player">
+		<div transition:persist='sticky-player'>
 			<StickyPlayer client:load />
 		</div>
 	</body>

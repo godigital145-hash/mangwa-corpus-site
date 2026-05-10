@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Header from "../Componant/Header";
-import Banniere from "../Componant/Banniere";
+import HeroSection from "../Componant/HeroSection";
 import SectionCategories from "../Componant/SectionCategories";
 import PanneauEdition from "../Componant/PanneauEdition";
 import SectionEdition from "../Componant/SectionEdition";
@@ -12,21 +12,18 @@ import Footer from "../Componant/Footer";
 
 <Layout>
 	<Header client:load />
-	<Banniere
-		client:load
-		imageUrl=""
-		titre="Plongez au Cœur de l'Information et du Son"
-	/>
-	<SectionCategories client:load />
+	<HeroSection client:load page="home" />
+	<!-- <SectionCategories client:load /> -->
 	<PanneauEdition
 		client:load
 		nom="Samuel ETO'O"
-		description="Un homme, une histoire, une légende vivante"
-		ctaLabel="Obtenir un exemple"
-		ctaHref="#"
+		description='Un homme, une histoire, une légende vivante'
+		ctaLabel='Obtenir un exemple'
+		ctaHref='#'
 	/>
-	<SectionEdition client:load />
-	<SectionAudio client:load />
 	<SectionLibrairie client:load />
+	<!-- <SectionEdition client:load /> -->
+	<SectionAudio client:load />
+
 	<Footer client:load />
 </Layout>
