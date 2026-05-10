@@ -32,7 +32,7 @@ export default function ListeEditions() {
     <section className="w-full mt-10">
       <Container>
         <div className="flex flex-col divide-y divide-gray-200">
-          {magazines.map((mag) => (
+          {magazines.slice(0, 5).map((mag) => (
             <div
               key={mag.id}
               className="grid grid-cols-1 sm:grid-cols-4 sm:gap-6 py-6 items-start"

@@ -37,6 +37,7 @@ export type Audio = {
   price: number | null
   free: number
   album: string | null
+  album_id: number | null
   lyrics: string | null
   created_at: string
   updated_at: string
@@ -123,6 +124,32 @@ export type Payment = {
   method_name: string | null
 }
 
+export type Album = {
+  id: number
+  title: string
+  artist: string | null
+  cover: string | null
+  description: string | null
+  genre: string | null
+  published_at: string | null
+  featured: number
+  price: number | null
+  free: number
+  created_at: string
+  updated_at: string
+}
+
+export type AlbumTrack = {
+  audio_id: number
+  track_order: number
+  title: string
+  artist: string | null
+  cover: string | null
+  audio_file: string | null
+  duration: number | null
+  free: number
+}
+
 export type ActivityEntry = {
   id: number
   action: 'create' | 'update' | 'delete'
@@ -136,11 +163,11 @@ export type ActivityEntry = {
 export const api = {
   magazines: (): Promise<Magazine[]> =>
     fetch(`${API_URL}/api/magazines`).then((r) => r.json()),
-  magazine: (id: number): Promise<Magazine> =>
+  magazine: (id: string): Promise<Magazine> =>
     fetch(`${API_URL}/api/magazines/${id}`).then((r) => r.json()),
   audios: (): Promise<Audio[]> =>
     fetch(`${API_URL}/api/audios`).then((r) => r.json()),
-  audio: (id: number): Promise<Audio> =>
+  audio: (id: string): Promise<Audio> =>
     fetch(`${API_URL}/api/audios/${id}`).then((r) => r.json()),
   videos: (): Promise<Video[]> =>
     fetch(`${API_URL}/api/videos`).then((r) => r.json()),
@@ -148,6 +175,12 @@ export const api = {
     fetch(`${API_URL}/api/hero${page ? `?page=${encodeURIComponent(page)}` : ''}`).then((r) => r.json()),
   media: (): Promise<MediaFile[]> =>
     fetch(`${API_URL}/api/media`).then((r) => r.json()),
+  albums: (): Promise<Album[]> =>
+    fetch(`${API_URL}/api/albums`).then((r) => r.json()),
+  album: (id: string): Promise<Album & { tracks: AlbumTrack[] }> =>
+    fetch(`${API_URL}/api/albums/${id}`).then((r) => r.json()),
+  audioAlbum: (audioId: string): Promise<(Album & { tracks: Audio[] }) | null> =>
+    fetch(`${API_URL}/api/audios/${audioId}/album`).then((r) => r.json()),
 }
 
 export function adminApi(token: string) {
@@ -184,6 +217,22 @@ export function adminApi(token: string) {
         fetch(`${API_URL}/admin/hero/${id}`, { method: 'PUT', headers: auth, body: form }),
       delete: (id: number) =>
         fetch(`${API_URL}/admin/hero/${id}`, { method: 'DELETE', headers: auth }),
+    },
+    albums: {
+      create: (form: FormData) =>
+        fetch(`${API_URL}/admin/albums`, { method: 'POST', headers: auth, body: form }),
+      update: (id: number, form: FormData) =>
+        fetch(`${API_URL}/admin/albums/${id}`, { method: 'PUT', headers: auth, body: form }),
+      delete: (id: number) =>
+        fetch(`${API_URL}/admin/albums/${id}`, { method: 'DELETE', headers: auth }),
+      tracks: (id: number): Promise<AlbumTrack[]> =>
+        fetch(`${API_URL}/admin/albums/${id}/tracks`, { headers: auth }).then((r) => r.json()),
+      setTracks: (id: number, tracks: { audio_id: number; track_order: number }[]) =>
+        fetch(`${API_URL}/admin/albums/${id}/tracks`, {
+          method: 'PUT',
+          headers: { ...auth, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tracks }),
+        }),
     },
     media: {
       upload: (form: FormData) =>

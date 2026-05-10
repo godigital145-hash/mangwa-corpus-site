@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { SVGProps } from "react";
 import Container from "./Container";
 import { FluentMusicNote124Filled } from "./SectionAudio";
@@ -29,7 +29,7 @@ const DownloadIcon = () => (
   </svg>
 );
 
-const BAR_COUNT = 237;
+const BAR_COUNT = typeof window !== "undefined" && window.innerWidth < 640 ? 120 : 237;
 
 function formatTime(s: number) {
   const m = Math.floor(s / 60);
@@ -47,42 +47,68 @@ function Waveform({
   onSeek: (ratio: number) => void;
 }) {
   const { bars, loading } = useAudioWaveform(audioUrl, BAR_COUNT);
-  const playedCount = Math.floor(progress * BAR_COUNT);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    onSeek(Math.max(0, Math.min(1, ratio)));
-  };
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !bars) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (!w || !h) return;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext("2d")!;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+    const count = bars.length;
+    const playedCount = Math.floor(progress * count);
+    const barW = w / count;
+    const gap = 0;
+    for (let i = 0; i < count; i++) {
+      const barH = Math.max(2, (bars[i] / 100) * h);
+      const x = i * (barW + gap);
+      const y = h - barH;
+      ctx.fillStyle = i < playedCount ? "#00bcd4" : "#6b7280";
+      ctx.globalAlpha = i < playedCount ? 1 : (i < 20 ? 0.9 : 0.55);
+      ctx.beginPath();
+      const r = Math.min(barW / 2, 2);
+      if (ctx.roundRect) ctx.roundRect(x, y, barW, barH, r);
+      else ctx.rect(x, y, barW, barH);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }, [bars, progress]);
+
+  useEffect(() => {
+    draw();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ro = new ResizeObserver(draw);
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, [draw]);
 
   if (loading || !bars) {
     return (
       <div className="flex items-end gap-[1.5px] h-[90px] w-full">
         {Array.from({ length: BAR_COUNT }).map((_, i) => (
-          <div key={i} className="flex-1 rounded-sm bg-gray-700 animate-pulse" style={{ height: "30%" }} />
+          <div key={i} className="flex-1 bg-gray-700 animate-pulse" style={{ height: "30%", borderRadius: 2 }} />
         ))}
       </div>
     );
   }
 
   return (
-    <div
-      className="flex items-end gap-[1.5px] h-[90px] w-full cursor-pointer"
-      onClick={handleClick}
+    <canvas
+      ref={canvasRef}
+      className="w-full h-[90px] cursor-pointer block"
+      onClick={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        onSeek(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
+      }}
       title="Cliquer pour se positionner"
-    >
-      {Array.from(bars).map((h, i) => (
-        <div
-          key={i}
-          className="flex-1 rounded-sm transition-colors"
-          style={{
-            height: `${Math.max(4, h)}%`,
-            backgroundColor: i < playedCount ? "#00bcd4" : "#6b7280",
-            opacity: i < playedCount ? 1 : (i < 20 ? 0.9 : 0.55),
-          }}
-        />
-      ))}
-    </div>
+    />
   );
 }
 
@@ -202,7 +228,7 @@ export default function ListeAudio() {
           </div>
         )}
         <div className="flex flex-col gap-3">
-          {audios.map((audio) => (
+          {audios.slice(0, 5).map((audio) => (
             <TrackRow
               key={audio.id}
               id={String(audio.id)}

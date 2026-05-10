@@ -16,7 +16,7 @@ export default function StickyPlayer() {
 
   const { titre, artiste, coverUrl } = engine.currentTrack;
   const { playing, progress, currentTime, duration } = engine;
-  console.log(engine);
+
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#1c1c1c] border-t border-white/10 shadow-2xl">
@@ -65,6 +65,17 @@ export default function StickyPlayer() {
             ? <FluentPause32Filled className="h-5 w-5" />
             : <FluentPlay32Filled className="h-5 w-5" />
           }
+        </button>
+
+        {/* Fermer */}
+        <button
+          onClick={() => audioEngine.close()}
+          className="w-8 h-8 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center text-gray-400 hover:text-white shrink-0"
+          aria-label="Fermer le lecteur"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
         </button>
       </div>
     </div>

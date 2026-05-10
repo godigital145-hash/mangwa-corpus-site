@@ -97,6 +97,18 @@ class AudioEngine {
     else this.play();
   }
 
+  close() {
+    this.stopSource();
+    this.playing = false;
+    this.currentTrack = null;
+    this.currentAudioUrl = null;
+    this.progress = 0;
+    this.currentTime = 0;
+    this.duration = 0;
+    this._offset = 0;
+    this.notify();
+  }
+
   seek(ratio: number) {
     const url = this.currentAudioUrl;
     if (!url) return;

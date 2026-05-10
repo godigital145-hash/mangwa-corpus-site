@@ -21,62 +21,13 @@ type Counts = {
 };
 
 const CARDS = [
-  {
-    key: "magazines" as keyof Counts,
-    label: "Magazines",
-    href: "/admin/magazines",
-    desc: "Éditions et e-books",
-    color: "text-blue-500",
-    Icon: IcTwotoneNewspaper,
-  },
-  {
-    key: "audios" as keyof Counts,
-    label: "Audios",
-    href: "/admin/audios",
-    desc: "Pistes audio",
-    color: "text-purple-500",
-    Icon: IcBaselineLibraryMusic,
-  },
-  {
-    key: "videos" as keyof Counts,
-    label: "Vidéos",
-    href: "/admin/videos",
-    desc: "Vidéos",
-    color: "text-red-500",
-    Icon: IcRoundVideoLibrary,
-  },
-  {
-    key: "hero" as keyof Counts,
-    label: "Hero",
-    href: "/admin/hero",
-    desc: "Bannières d'accueil",
-    color: "text-amber-500",
-    Icon: IcSharpCropLandscape,
-  },
-  {
-    key: "media" as keyof Counts,
-    label: "Médiathèque",
-    href: "/admin/media",
-    desc: "Fichiers médias",
-    color: "text-teal-500",
-    Icon: IcSharpPermMedia,
-  },
-  {
-    key: "users" as keyof Counts,
-    label: "Utilisateurs",
-    href: "/admin/users",
-    desc: "Comptes utilisateurs",
-    color: "text-indigo-500",
-    Icon: IcBaselinePeople,
-  },
-  {
-    key: "newsletter" as keyof Counts,
-    label: "Newsletter",
-    href: "/admin/newsletter",
-    desc: "Abonnés newsletter",
-    color: "text-pink-500",
-    Icon: IcBaselineEmail,
-  },
+  { key: "magazines" as keyof Counts, label: "Magazines", href: "/admin/magazines", Icon: IcTwotoneNewspaper },
+  { key: "audios" as keyof Counts, label: "Audios", href: "/admin/audios", Icon: IcBaselineLibraryMusic },
+  { key: "videos" as keyof Counts, label: "Vidéos", href: "/admin/videos", Icon: IcRoundVideoLibrary },
+  { key: "hero" as keyof Counts, label: "Hero", href: "/admin/hero", Icon: IcSharpCropLandscape },
+  { key: "media" as keyof Counts, label: "Médiathèque", href: "/admin/media", Icon: IcSharpPermMedia },
+  { key: "users" as keyof Counts, label: "Utilisateurs", href: "/admin/users", Icon: IcBaselinePeople },
+  { key: "newsletter" as keyof Counts, label: "Newsletter", href: "/admin/newsletter", Icon: IcBaselineEmail },
 ];
 
 export default function AdminDashboardCards({ token }: { token: string }) {
@@ -104,27 +55,27 @@ export default function AdminDashboardCards({ token }: { token: string }) {
   }, [token]);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-10">
-      {CARDS.map((card) => {
+    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-10">
+      {CARDS.map((card, i) => {
         const count = counts[card.key];
         return (
           <a
             key={card.key}
             href={card.href}
-            className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow group flex flex-col justify-between gap-3 min-h-35"
+            className="anim-fade-up bg-white border border-gray-200 rounded-lg p-4 flex flex-col gap-2
+              transition-[transform,border-color] duration-150 ease-out
+              hover:-translate-y-px hover:border-gray-300"
+            style={{ animationDelay: `${i * 40}ms` }}
           >
-            <div className="flex items-start justify-between">
-              <card.Icon className={`h-9 w-9 ${card.color}`} />
-              <span className={`text-2xl font-extrabold ${loading ? "text-gray-200" : "text-gray-900"} tabular-nums`}>
-                {loading ? "—" : (count ?? "—")}
-              </span>
-            </div>
-            <div>
-              <h2 className="font-bold text-gray-900 text-sm group-hover:text-[#00bcd4] transition-colors">
-                {card.label}
-              </h2>
-              <p className="text-gray-400 text-xs mt-0.5">{card.desc}</p>
-            </div>
+            <card.Icon className="h-5 w-5 text-gray-400" />
+            <span
+              className={`text-xl font-bold tabular-nums transition-colors duration-300 ${
+                loading ? "text-gray-200" : "text-gray-900"
+              }`}
+            >
+              {loading ? "—" : (count ?? "—")}
+            </span>
+            <span className="text-xs font-medium text-gray-500">{card.label}</span>
           </a>
         );
       })}

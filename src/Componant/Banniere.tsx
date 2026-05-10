@@ -28,7 +28,7 @@ export default function Banniere({ page }: BanniereProps) {
   const hasPicture = desktop || tablet || mobile;
 
   return (
-    <section className="relative w-full h-[720px] md:h-[520px] lg:h-[471px] overflow-hidden bg-gray-300 mb-6 lg:mb-8">
+    <section className="relative w-full h-[720px] md:h-[520px] lg:h-[455px] overflow-hidden bg-gray-300 mb-6 lg:mb-8">
       {hasPicture && (
         <picture className="absolute inset-0 w-full h-full">
           {desktop && <source media="(min-width: 1024px)" srcSet={desktop} />}
@@ -41,11 +41,11 @@ export default function Banniere({ page }: BanniereProps) {
         </picture>
       )}
 
-      <div className="relative lg:w-[50%] h-full flex flex-col items-center px-6 sm:px-10 lg:px-16 pb-10 sm:pb-14 pt-12 sm:pt-16 lg:pt-20">
-        <h1 className="text-[24px] sm:text-[24px] lg:text-[32px] inter font-semibold text-white leading-tight max-w-205">
+      <div className="relative lg:w-[60%] lg:h-full flex flex-col items-center justify-center px-10 sm:px-10 lg:px-16 pb-10 sm:pb-14 pt-12 sm:pt-16 lg:pt-20">
+        <h1 className="text-[34px] sm:text-[24px] lg:text-[32px] inter font-semibold text-white leading-tight max-w-205">
           {titre}
         </h1>
-        <p className="text-white karma mt-5">
+        <p className="text-white karma mt-5 text-[16px] sm:text-[16px] lg:text-[20px] max-w-205">
           {descript}
         </p>
       </div>

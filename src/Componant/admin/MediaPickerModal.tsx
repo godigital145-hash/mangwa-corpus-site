@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api, adminApi, mediaUrl, type MediaFile } from "../../lib/api";
 
 const FOLDERS = [
@@ -28,17 +28,35 @@ export default function MediaPickerModal({ token, onSelect, onClose, defaultFold
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filterFolder, setFilterFolder] = useState<string>(defaultFolder ?? "all");
+  const [justUploadedKey, setJustUploadedKey] = useState<string | null>(null);
+  const newItemRef = useRef<HTMLButtonElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   const reload = () =>
     api.media().then(setItems).catch(() => setError("Erreur de chargement")).finally(() => setLoading(false));
 
   useEffect(() => { reload(); }, []);
 
-  async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (justUploadedKey && newItemRef.current) {
+      newItemRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [justUploadedKey, items]);
+
+  async function handleUpload(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
+    const formEl = formRef.current;
+    if (!formEl) return;
+    const form = new FormData(formEl);
+    const folder = form.get('folder') as string;
+    const fileInput = formEl.querySelector('input[type="file"]') as HTMLInputElement;
+    if (!fileInput?.files?.length) {
+      setError("Veuillez sélectionner un fichier");
+      return;
+    }
     setUploading(true);
     setError(null);
-    const form = new FormData(e.currentTarget);
+    setJustUploadedKey(null);
     try {
       const res = await adminApi(token).media.upload(form);
       if (!res.ok) {
@@ -46,11 +64,12 @@ export default function MediaPickerModal({ token, onSelect, onClose, defaultFold
         throw new Error(data.error ?? "Erreur upload");
       }
       const { key } = await res.json() as { key: string };
+      formEl.reset();
+      setJustUploadedKey(key);
+      if (filterFolder !== folder && filterFolder !== "all") setFilterFolder(folder);
       await reload();
-      (e.target as HTMLFormElement).reset();
-      onSelect(key);
     } catch (err: any) {
-      setError(err.message ?? "Erreur upload");
+      setError((err as Error).message ?? "Erreur upload");
     } finally {
       setUploading(false);
     }
@@ -60,14 +79,23 @@ export default function MediaPickerModal({ token, onSelect, onClose, defaultFold
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col relative">
+
+        {/* Upload overlay */}
+        {uploading && (
+          <div className="absolute inset-0 bg-white/80 rounded-xl z-10 flex flex-col items-center justify-center gap-4">
+            <div className="w-12 h-12 border-4 border-[#00bcd4] border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-700 font-medium text-sm">Téléchargement en cours…</p>
+          </div>
+        )}
+
         <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
           <h2 className="font-bold text-gray-900">Médiathèque</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
         </div>
 
         <div className="px-6 py-4 border-b shrink-0 bg-gray-50">
-          <form onSubmit={handleUpload} className="flex flex-col sm:flex-row gap-3 items-end">
+          <form ref={formRef} className="flex flex-col sm:flex-row gap-3 items-end">
             <label className="flex flex-col gap-1 text-sm text-gray-700 flex-1">
               Dossier
               <select
@@ -89,18 +117,25 @@ export default function MediaPickerModal({ token, onSelect, onClose, defaultFold
               />
             </label>
             <button
-              type="submit"
+              type="button"
+              onClick={handleUpload}
               disabled={uploading}
               className="bg-[#00bcd4] hover:bg-[#00acc1] text-white font-bold px-5 py-2 rounded text-sm disabled:opacity-60 shrink-0"
             >
-              {uploading ? "Upload…" : "Uploader & Sélectionner"}
+              Uploader
             </button>
           </form>
           {error && <p className="text-red-600 text-xs mt-2">{error}</p>}
+          {justUploadedKey && !uploading && (
+            <p className="text-green-600 text-xs mt-2 font-medium">
+              Fichier uploadé — cliquez dessus dans la grille pour le sélectionner
+            </p>
+          )}
         </div>
 
         <div className="px-6 py-3 border-b shrink-0 flex gap-2 flex-wrap">
           <button
+            type="button"
             onClick={() => setFilterFolder("all")}
             className={`px-3 py-1 rounded text-xs font-medium transition-colors ${filterFolder === "all" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
           >
@@ -112,6 +147,7 @@ export default function MediaPickerModal({ token, onSelect, onClose, defaultFold
             return (
               <button
                 key={f}
+                type="button"
                 onClick={() => setFilterFolder(f)}
                 className={`px-3 py-1 rounded text-xs font-medium transition-colors ${filterFolder === f ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               >
@@ -133,14 +169,25 @@ export default function MediaPickerModal({ token, onSelect, onClose, defaultFold
               {filtered.map((file) => {
                 const url = mediaUrl(file.key);
                 const isImage = file.content_type?.startsWith("image/");
+                const isNew = file.key === justUploadedKey;
                 return (
                   <button
                     key={file.key}
+                    ref={isNew ? newItemRef : null}
                     type="button"
-                    onClick={() => onSelect(file.key)}
-                    className="bg-white rounded-lg border-2 border-gray-200 hover:border-[#00bcd4] overflow-hidden text-left transition-colors"
+                    onClick={() => { onSelect(file.key); }}
+                    className={`rounded-lg border-2 overflow-hidden text-left transition-all ${
+                      isNew
+                        ? "border-green-500 ring-2 ring-green-300 bg-green-50 scale-105"
+                        : "bg-white border-gray-200 hover:border-[#00bcd4]"
+                    }`}
                   >
-                    <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+                    <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative">
+                      {isNew && (
+                        <span className="absolute top-1 right-1 bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded z-10">
+                          NOUVEAU
+                        </span>
+                      )}
                       {isImage && url
                         ? <img src={url} alt={file.filename} className="w-full h-full object-cover" />
                         : (
