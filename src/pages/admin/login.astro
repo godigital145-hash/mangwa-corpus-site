@@ -1,12 +1,11 @@
 ---
 import "../../styles/global.css";
+const ADMIN_PASSWORD = "ton_mot_de_passe_ici"
 
-const runtime = Astro.locals.runtime;
 if (Astro.request.method === "POST") {
   const form = await Astro.request.formData();
   const password = form.get("password") as string;
-  const secret = runtime.env.ADMIN_SECRET ?? "";
-  if (password && secret && password === secret) {
+  if (password && password === ADMIN_PASSWORD) {
     Astro.cookies.set("admin_token", password, {
       path: "/",
       httpOnly: false,
@@ -17,13 +16,16 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const secret = runtime.env.ADMIN_SECRET;
+//const secret = runtime.env.ADMIN_SECRET;
+//const error =
+//  Astro.request.method === "POST"
+//    ? secret
+//      ? "Mot de passe incorrect."
+//      : "ADMIN_SECRET non défini dans .env — redémarrez le serveur."
+//    : null;
+
 const error =
-  Astro.request.method === "POST"
-    ? secret
-      ? "Mot de passe incorrect."
-      : "ADMIN_SECRET non défini dans .env — redémarrez le serveur."
-    : null;
+  Astro.request.method === "POST" ? "Mot de passe incorrect." : null;
 ---
 
 <!doctype html>
