@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8787'
+const API_URL = import.meta.env.PUBLIC_API_URL ?? 'https://serveur.mangwacorpus.com'
 
 export function mediaUrl(key: string | null | undefined): string | null {
   if (!key) return null
