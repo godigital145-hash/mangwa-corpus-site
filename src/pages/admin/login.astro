@@ -5,6 +5,7 @@ const ADMIN_PASSWORD = "ton_mot_de_passe_ici"
 if (Astro.request.method === "POST") {
   const form = await Astro.request.formData();
   const password = form.get("password") as string;
+  
   if (password && password === ADMIN_PASSWORD) {
     Astro.cookies.set("admin_token", password, {
       path: "/",
