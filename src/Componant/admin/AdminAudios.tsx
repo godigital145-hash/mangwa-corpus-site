@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api, adminApi, mediaUrl, type Audio, type Album, type AlbumTrack } from "../../lib/api";
+import { decodeWaveform } from "../../utils/audioWaveform";
 import MediaField from "./MediaField";
 
 type AlbumTab = "info" | "tracks";
@@ -283,6 +284,7 @@ export default function AdminAudios({ token }: { token: string }) {
   const [modal, setModal] = useState<{ open: boolean; item?: Audio }>({ open: false });
   const [selectedAlbumId, setSelectedAlbumId] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [waveformStatus, setWaveformStatus] = useState<"idle" | "computing">("idle");
   const [error, setError] = useState<string | null>(null);
 
   const reload = () =>
@@ -298,6 +300,26 @@ export default function AdminAudios({ token }: { token: string }) {
     setSaving(true);
     setError(null);
     const form = new FormData(e.currentTarget);
+
+    const audioKey = form.get("audio_file") as string | null;
+    const existingWaveform = modal.item?.waveform;
+    const audioChanged = audioKey && audioKey !== modal.item?.audio_file;
+
+    if (audioKey && (audioChanged || !existingWaveform)) {
+      try {
+        setWaveformStatus("computing");
+        const url = mediaUrl(audioKey);
+        if (url) {
+          const bars = await decodeWaveform(url, 200);
+          form.set("waveform", JSON.stringify(Array.from(bars)));
+        }
+      } catch {
+        // waveform est optionnel — on continue sans bloquer
+      } finally {
+        setWaveformStatus("idle");
+      }
+    }
+
     const a = adminApi(token);
     try {
       if (modal.item) {
@@ -475,10 +497,13 @@ export default function AdminAudios({ token }: { token: string }) {
               <MediaField label="Fichier paroles (TXT/JSON)" name="lyrics" token={token} currentKey={modal.item?.lyrics} defaultFolder="audios/files" />
 
               {error && <p className="text-red-600 text-sm">{error}</p>}
+              {waveformStatus === "computing" && (
+                <p className="text-xs text-gray-400">Calcul de la waveform…</p>
+              )}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setModal({ open: false })} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors duration-150">Annuler</button>
-                <button type="submit" disabled={saving} className="bg-[#00bcd4] hover:bg-[#00acc1] text-white font-bold px-6 py-2 rounded text-sm disabled:opacity-60 transition-colors duration-150">
-                  {saving ? "Enregistrement…" : "Enregistrer"}
+                <button type="submit" disabled={saving || waveformStatus === "computing"} className="bg-[#00bcd4] hover:bg-[#00acc1] text-white font-bold px-6 py-2 rounded text-sm disabled:opacity-60 transition-colors duration-150">
+                  {waveformStatus === "computing" ? "Calcul waveform…" : saving ? "Enregistrement…" : "Enregistrer"}
                 </button>
               </div>
             </form>

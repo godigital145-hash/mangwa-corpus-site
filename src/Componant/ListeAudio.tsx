@@ -41,12 +41,14 @@ function Waveform({
   audioUrl,
   progress,
   onSeek,
+  precomputed,
 }: {
   audioUrl: string;
   progress: number;
   onSeek: (ratio: number) => void;
+  precomputed?: number[] | null;
 }) {
-  const { bars, loading } = useAudioWaveform(audioUrl, BAR_COUNT);
+  const { bars, loading } = useAudioWaveform(audioUrl, BAR_COUNT, precomputed);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const draw = useCallback(() => {
@@ -112,7 +114,7 @@ function Waveform({
   );
 }
 
-function TrackRow({ id, titre, artiste, audioUrl, coverUrl }: { id: string; titre: string; artiste: string; audioUrl: string; coverUrl?: string | null }) {
+function TrackRow({ id, titre, artiste, audioUrl, coverUrl, waveformData }: { id: string; titre: string; artiste: string; audioUrl: string; coverUrl?: string | null; waveformData?: number[] | null }) {
   const engine = useAudioEngine();
   const isThisTrack = engine.currentAudioUrl === audioUrl;
   const playing = isThisTrack && engine.playing;
@@ -166,7 +168,7 @@ function TrackRow({ id, titre, artiste, audioUrl, coverUrl }: { id: string; titr
           </div>
 
           {/* Waveform cliquable */}
-          <Waveform audioUrl={audioUrl} progress={progress} onSeek={seek} />
+          <Waveform audioUrl={audioUrl} progress={progress} onSeek={seek} precomputed={waveformData} />
 
           {/* Barre de progression */}
           <div
@@ -211,7 +213,13 @@ export default function ListeAudio() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.audios().then(setAudios).catch(console.error).finally(() => setLoading(false));
+    api.audios()
+      .then(setAudios)
+      .catch(console.error)
+      .finally(() => {
+        setLoading(false);
+        window.dispatchEvent(new CustomEvent("mangwa:component-ready"));
+      });
   }, []);
 
   return (
@@ -236,6 +244,7 @@ export default function ListeAudio() {
               artiste={audio.artist}
               audioUrl={mediaUrl(audio.audio_file) ?? ''}
               coverUrl={mediaUrl(audio.cover)}
+              waveformData={audio.waveform ? (JSON.parse(audio.waveform) as number[]) : null}
             />
           ))}
         </div>

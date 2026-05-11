@@ -7,14 +7,21 @@ interface WaveformState {
   error: string | null;
 }
 
-export function useAudioWaveform(audioUrl: string, barCount = 80): WaveformState {
-  const [state, setState] = useState<WaveformState>(() => ({
-    bars: getCachedWaveform(audioUrl, barCount),
-    loading: !getCachedWaveform(audioUrl, barCount),
-    error: null,
-  }));
+export function useAudioWaveform(
+  audioUrl: string,
+  barCount = 80,
+  precomputed?: number[] | null,
+): WaveformState {
+  const [state, setState] = useState<WaveformState>(() => {
+    if (precomputed?.length) {
+      return { bars: new Uint32Array(precomputed), loading: false, error: null };
+    }
+    const cached = getCachedWaveform(audioUrl, barCount);
+    return { bars: cached, loading: !cached, error: null };
+  });
 
   useEffect(() => {
+    if (precomputed?.length) return;
     if (getCachedWaveform(audioUrl, barCount)) return;
 
     setState({ bars: null, loading: true, error: null });
@@ -22,7 +29,7 @@ export function useAudioWaveform(audioUrl: string, barCount = 80): WaveformState
     decodeWaveform(audioUrl, barCount)
       .then((bars) => setState({ bars, loading: false, error: null }))
       .catch((err) => setState({ bars: null, loading: false, error: String(err) }));
-  }, [audioUrl, barCount]);
+  }, [audioUrl, barCount, precomputed]);
 
   return state;
 }
