@@ -1,10 +1,11 @@
 ---
 import "../../styles/global.css";
 
+const runtime = Astro.locals.runtime;
 if (Astro.request.method === "POST") {
   const form = await Astro.request.formData();
   const password = form.get("password") as string;
-  const secret = import.meta.env.ADMIN_SECRET ?? "";
+  const secret = runtime.env.ADMIN_SECRET ?? "";
   if (password && secret && password === secret) {
     Astro.cookies.set("admin_token", password, {
       path: "/",
@@ -16,7 +17,7 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const secret = import.meta.env.ADMIN_SECRET;
+const secret = runtime.env.ADMIN_SECRET;
 const error =
   Astro.request.method === "POST"
     ? secret
