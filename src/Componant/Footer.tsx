@@ -29,10 +29,10 @@ const TwitterIcon = () => (
 );
 
 const links = {
-  ebooks: ["Romans", "Biographies", "Développement personnel", "Jeunesse", "Sciences"],
-  magazines: ["Édition Spéciale", "Culture", "Société", "Sport", "Économie"],
-  audios: ["Gospel", "Afrobeat", "Jazz & Soul", "Podcasts", "Playlists"],
-  services: ["Abonnement", "Partenariat", "Publicité", "À propos", "Contact"],
+  ebooks: ["Livres"],
+  magazines: ["Édition Spéciale", "Editions Limitées", "Édition 1, 2, 3", "Édition 4, 5, 6"],
+  audios: ["Albums", "Emission Vidéos", "Vidéos", "Podcasts", "Playlists"],
+  services: ["Paiement", "Partenariat", "Publicité", "À propos"],
 };
 
 export default function Footer() {
@@ -134,7 +134,7 @@ export default function Footer() {
           {/* Colonne Audios */}
           <div className="flex flex-col gap-4">
             <h4 className="text-white font-bold text-[13px] uppercase tracking-widest border-b border-white/10 pb-3">
-              Audios
+              Audios & Videos
             </h4>
             <ul className="flex flex-col gap-2.5">
               {links.audios.map((l) => (

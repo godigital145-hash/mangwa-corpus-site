@@ -6,41 +6,25 @@ import NosCompositions from "../Componant/NosCompositions";
 import Footer from "../Componant/Footer";
 import Container from "../Componant/Container";
 import audioBg from "../assets/audio.png";
+import Banniere from "../Componant/Banniere";
+import PageLoader from "../Componant/PageLoader";
 ---
 
-<Layout>
+<Layout
+  title='Audios'
+  description='Écoutez nos albums et pistes audio africains avec paroles intégrées. Musiques originales, compositions et bien plus sur Mangwa Corpus.'>
+  <PageLoader count={2} client:load />
   <Header client:load />
 
   <Container>
-    <h1 class="text-[22px] sm:text-[26px] font-bold text-gray-900 mt-6 mb-4">
+    <h1 class='text-[22px] sm:text-[26px] font-bold text-gray-900 mt-6 mb-4'>
       Audios
     </h1>
   </Container>
-
-  <!-- Hero banner -->
-  <Container>
-    <div class="relative w-full h-[200px] sm:h-[280px] overflow-hidden bg-black">
-      <!-- Image à droite -->
-      <img
-        src={audioBg.src}
-        alt="Audio"
-        class="absolute right-0 top-0 h-full w-auto object-contain object-right"
-      />
-      <!-- Dégradé noir à gauche -->
-      <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-      <!-- Texte à gauche -->
-      <div class="absolute top-0 left-0 h-full flex flex-col justify-center px-8 sm:px-12 max-w-[60%] gap-3 z-10">
-        <h2 class="text-white font-bold text-[20px] sm:text-[26px] lg:text-[30px] leading-tight karma">
-          Plongez dans nos audios accompagnés de leurs paroles.
-        </h2>
-        <p class="text-white/70 text-[12px] sm:text-[13px] leading-relaxed hidden sm:block">
-          Chaque contenu est une expérience complète où le son et les mots se rencontrent pour
-          transmettre émotion, message et inspiration. Écoutez, suivez les lyrics et laissez-vous
-          porter par chaque détail.
-        </p>
-      </div>
-    </div>
+  <Container client:load>
+    <Banniere page='audio' client:load />
   </Container>
+  <!-- Hero banner -->
 
   <ListeAudio client:load />
   <NosCompositions client:load />

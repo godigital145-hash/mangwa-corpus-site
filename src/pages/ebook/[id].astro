@@ -4,19 +4,45 @@ import Header from "../../Componant/Header";
 import Footer from "../../Componant/Footer";
 import Container from "../../Componant/Container";
 import EbookDetailViewer from "../../Componant/EbookDetailViewer";
+import { api, mediaUrl } from "../../lib/api";
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect("/ebook");
+
+let magazine = null;
+try { magazine = await api.magazine(id); } catch {}
+
+const seoTitle = magazine?.title ?? "E-Book";
+const seoDesc = magazine?.description
+  ?? "Lisez ce magazine ou e-book africain en exclusivité sur Mangwa Corpus.";
+const seoImage = magazine?.cover ? mediaUrl(magazine.cover) ?? undefined : undefined;
+
+const jsonLd = magazine ? {
+  "@context": "https://schema.org",
+  "@type": "Book",
+  name: magazine.title,
+  description: seoDesc,
+  image: seoImage,
+  inLanguage: "fr",
+  publisher: { "@type": "Organization", name: "Mangwa Corpus" },
+  ...(magazine.published_at ? { datePublished: magazine.published_at } : {}),
+} : undefined;
 ---
 
-<Layout>
+<Layout
+  title={seoTitle}
+  description={seoDesc}
+  image={seoImage}
+  type="article"
+  jsonLd={jsonLd}
+>
   <Header client:load />
 
   <Container>
     <nav class="flex items-center gap-2 text-[13px] text-gray-400 mt-6 mb-2">
       <a href="/ebook" class="hover:text-gray-700 transition-colors">E-Book</a>
       <span>/</span>
-      <span class="text-gray-700 font-medium">Détail</span>
+      <span class="text-gray-700 font-medium">{magazine?.title ?? "Détail"}</span>
     </nav>
 
     <EbookDetailViewer client:load id={id} />

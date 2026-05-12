@@ -2,23 +2,84 @@
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
 import StickyPlayer from "../Componant/StickyPlayer";
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: string;
+  noindex?: boolean;
+  jsonLd?: object;
+}
+
+const {
+  title,
+  description = "Découvrez les musiques, magazines et e-books africains sur Mangwa Corpus. Une médiathèque culturelle riche en contenus audio, visuels et littéraires.",
+  image,
+  type = "website",
+  noindex = false,
+  jsonLd,
+} = Astro.props;
+
+const siteTitle = title
+  ? `${title} — Mangwa Corpus`
+  : "Mangwa Corpus – Musiques, Magazines & E-Books africains";
+const canonical = Astro.url.href;
+const origin = Astro.url.origin;
+const ogImage = image ?? `${origin}/og-default.png`;
+
+const defaultJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Mangwa Corpus",
+  url: origin,
+  logo: `${origin}/favicon.svg`,
+  description,
+  inLanguage: "fr",
+};
+const structuredData = jsonLd ?? defaultJsonLd;
 ---
 
 <!doctype html>
 <html lang='fr'>
-	<head>
-		<meta charset='UTF-8' />
-		<meta name='viewport' content='width=device-width' />
-		<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
-		<link rel='icon' href='/favicon.ico' />
-		<meta name='generator' content={Astro.generator} />
-		<title>Mangwa Corpus</title>
-		<ClientRouter />
-	</head>
-	<body>
-		<slot />
-		<div transition:persist='sticky-player'>
-			<StickyPlayer client:load />
-		</div>
-	</body>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <link rel='icon' type='image/svg+xml' href='/favicon.svg' />
+    <link rel='icon' href='/favicon.ico' />
+    <meta name='generator' content={Astro.generator} />
+
+    <!-- Primary -->
+    <title>{siteTitle}</title>
+    <meta name='description' content={description} />
+    <link rel='canonical' href={canonical} />
+    {noindex && <meta name='robots' content='noindex,nofollow' />}
+
+    <!-- Open Graph -->
+    <meta property='og:type' content={type} />
+    <meta property='og:title' content={siteTitle} />
+    <meta property='og:description' content={description} />
+    <meta property='og:url' content={canonical} />
+    <meta property='og:image' content={ogImage} />
+    <meta property='og:image:alt' content={siteTitle} />
+    <meta property='og:locale' content='fr_FR' />
+    <meta property='og:site_name' content='Mangwa Corpus' />
+
+    <!-- Twitter Card -->
+    <meta name='twitter:card' content='summary_large_image' />
+    <meta name='twitter:title' content={siteTitle} />
+    <meta name='twitter:description' content={description} />
+    <meta name='twitter:image' content={ogImage} />
+
+    <!-- JSON-LD -->
+    <script type='application/ld+json' set:html={JSON.stringify(structuredData)} />
+
+    <ClientRouter />
+  </head>
+  <body>
+    <slot />
+    <div transition:persist='sticky-player'>
+      <StickyPlayer client:load />
+    </div>
+  </body>
 </html>

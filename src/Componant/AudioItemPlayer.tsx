@@ -217,8 +217,8 @@ function CollapsibleDescription({ description }: { description: string | null })
         ref={contentRef}
         className="overflow-hidden transition-all duration-300 ease-in-out"
         style={{
-          maxHeight: open ? (contentRef.current?.scrollHeight ?? 400) + "px" : "0px",
-          opacity: open ? 1 : 0,
+          maxHeight: open ? (contentRef.current?.scrollHeight ?? 400) + "px" : "25px",
+          opacity: open ? 1 : 0.5,
         }}
       >
         <p className="text-gray-400 text-[13px] leading-relaxed mt-3 whitespace-pre-line">

@@ -7,7 +7,7 @@ export const onRequest = defineMiddleware((ctx, next) => {
 
   if (path.startsWith('/admin') && !path.startsWith('/admin/login')) {
     const token = ctx.cookies.get('admin_token')?.value
-    const secret = ADMIN_PASSWORD //import.meta.env.ADMIN_SECRET
+    const secret = ADMIN_PASSWORD
 
     if (!secret || !token || token !== secret) {
       return ctx.redirect('/admin/login')

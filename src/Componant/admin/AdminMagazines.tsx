@@ -23,15 +23,18 @@ export default function AdminMagazines({ token }: { token: string }) {
     const form = new FormData(e.currentTarget);
     const a = adminApi(token);
     try {
-      if (modal.item) {
-        await a.magazines.update(modal.item.id, form);
-      } else {
-        await a.magazines.create(form);
+      const res = modal.item
+        ? await a.magazines.update(modal.item.id, form)
+        : await a.magazines.create(form);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as any;
+        setError(body?.error ?? `Erreur serveur ${res.status}`);
+        return;
       }
       await reload();
       setModal({ open: false });
     } catch {
-      setError("Erreur lors de la sauvegarde");
+      setError("Erreur réseau — vérifiez que le serveur est accessible");
     } finally {
       setSaving(false);
     }

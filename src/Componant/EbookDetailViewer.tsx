@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { api, mediaUrl, type Magazine } from "../lib/api";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-const MAX_PREVIEW_PAGES = 5;
+const MAX_PREVIEW_PAGES = 6;
 
 const DownloadIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -32,7 +33,7 @@ type PdfComponents = {
   Page: React.ComponentType<any>;
 };
 
-function PdfViewer({ url }: { url: string }) {
+function PdfViewer({ url, paymentUrl }: { url: string; paymentUrl: string }) {
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -44,8 +45,7 @@ function PdfViewer({ url }: { url: string }) {
 
   useEffect(() => {
     import("react-pdf").then((mod) => {
-      mod.pdfjs.GlobalWorkerOptions.workerSrc =
-        `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${mod.pdfjs.version}/pdf.worker.min.mjs`;
+      mod.pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
       setPdfLib({ Document: mod.Document, Page: mod.Page });
     });
     import("react-pdf/dist/Page/AnnotationLayer.css" as any);
@@ -100,7 +100,7 @@ function PdfViewer({ url }: { url: string }) {
               </p>
             </div>
             <a
-              href="#"
+              href={paymentUrl}
               className="bg-[#00bcd4] hover:bg-[#00acc1] transition-colors text-white font-bold px-8 py-3 text-[14px]"
             >
               Obtenir la version complète
@@ -160,7 +160,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    api.magazine(Number(id))
+    api.magazine(id)
       .then((data) => {
         if (!data || (data as any).error) {
           setNotFound(true);
@@ -202,6 +202,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
   const coverUrl = mediaUrl(mag.cover);
   const pdfPreviewUrl = mag.pdf_preview ? mediaUrl(mag.pdf_preview) : null;
   const pdfFileUrl = mag.pdf_file ? mediaUrl(mag.pdf_file) : null;
+  const paymentUrl = `/paiement?type=magazine&id=${id}`;
 
   return (
     <div className="flex flex-col gap-12 py-8">
@@ -256,18 +257,14 @@ export default function EbookDetailViewer({ id }: { id: string }) {
                 Lire l'extrait
               </a>
             )}
-            {pdfFileUrl && (
+            {(pdfFileUrl || mag.price != null) && (
               <a
-                href={pdfFileUrl}
-                target="_blank"
-                className="flex items-center justify-center gap-2 bg-[#6dbe6d] hover:bg-[#5cb85c] transition-colors text-white text-[14px] font-bold px-6 py-3"
+                href={mag.price ? paymentUrl : pdfFileUrl ?? "#"}
+                {...(mag.price ? {} : { download: true })}
+                className="flex items-center gap-2 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[12px] sm:text-[13px] font-bold"
               >
-                <span className="px-3 py-3">
-                  Téléchargement
-                </span>
-                <span className="px-3 py-3 bg-black/10">
-                  {mag.price != null ? `${mag.price.toLocaleString("fr-FR")} XAF` : "(Gratuit)"}
-                </span>
+                <span className="px-4 inter sm:px-5 py-2.5">{mag.price ? "Acheter" : "Télécharger"}</span>
+                <span className="px-4 inter sm:px-5 py-2.5 bg-black/20">{mag.price != null ? `${mag.price.toLocaleString("fr-FR")} XAF` : "Gratuit"}</span>
               </a>
             )}
             <span>
@@ -286,7 +283,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
           </span>
         </div>
         {pdfPreviewUrl
-          ? <PdfViewer url={pdfPreviewUrl} />
+          ? <PdfViewer url={pdfPreviewUrl} paymentUrl={paymentUrl} />
           : <NoPdfPlaceholder />
         }
       </div>

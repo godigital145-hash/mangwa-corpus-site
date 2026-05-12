@@ -4,12 +4,40 @@ import Header from "../../Componant/Header";
 import Footer from "../../Componant/Footer";
 import Container from "../../Componant/Container";
 import AlbumDetailPlayer from "../../Componant/AlbumDetailPlayer";
+import { api, mediaUrl } from "../../lib/api";
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect("/audio");
+
+let album = null;
+try { album = await api.album(id); } catch {}
+
+const seoTitle = album
+  ? `${album.title}${album.artist ? ` — ${album.artist}` : ""}`
+  : "Album";
+const seoDesc = album?.description
+  ?? "Écoutez cet album africain avec paroles intégrées sur Mangwa Corpus.";
+const seoImage = album?.cover ? mediaUrl(album.cover) ?? undefined : undefined;
+
+const jsonLd = album ? {
+  "@context": "https://schema.org",
+  "@type": "MusicAlbum",
+  name: album.title,
+  byArtist: album.artist ? { "@type": "MusicGroup", name: album.artist } : undefined,
+  description: seoDesc,
+  image: seoImage,
+  inLanguage: "fr",
+  ...(album.published_at ? { datePublished: album.published_at } : {}),
+} : undefined;
 ---
 
-<Layout>
+<Layout
+  title={seoTitle}
+  description={seoDesc}
+  image={seoImage}
+  type="music.album"
+  jsonLd={jsonLd}
+>
   <Header client:load />
 
   <Container>
@@ -17,7 +45,7 @@ if (!id) return Astro.redirect("/audio");
       <nav class="flex items-center gap-2 text-[13px] text-gray-400 mb-6">
         <a href="/audio" class="hover:text-gray-700 transition-colors">Audios</a>
         <span>/</span>
-        <span class="text-gray-700 font-medium">Album</span>
+        <span class="text-gray-700 font-medium">{album?.title ?? "Album"}</span>
       </nav>
 
       <AlbumDetailPlayer client:load id={id} />

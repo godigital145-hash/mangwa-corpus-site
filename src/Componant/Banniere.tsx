@@ -9,10 +9,14 @@ export default function Banniere({ page }: BanniereProps) {
   const [hero, setHero] = useState<HeroSection | null>(null);
 
   useEffect(() => {
-    api.hero(page).then((items) => {
-      const active = items.filter((h) => h.active).sort((a, b) => a.display_order - b.display_order);
-      if (active.length > 0) setHero(active[0]);
-    });
+    api.hero(page)
+      .then((items) => {
+        const active = items.filter((h) => h.active).sort((a, b) => a.display_order - b.display_order);
+        if (active.length > 0) setHero(active[0]);
+      })
+      .finally(() => {
+        window.dispatchEvent(new CustomEvent("mangwa:component-ready"));
+      });
   }, [page]);
 
   if (!hero) return null;

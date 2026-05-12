@@ -1,6 +1,7 @@
 ---
 import "../../styles/global.css";
-const ADMIN_PASSWORD = "admin1234"
+
+const ADMIN_PASSWORD = "admin1234";
 
 if (Astro.request.method === "POST") {
   const form = await Astro.request.formData();
@@ -16,14 +17,6 @@ if (Astro.request.method === "POST") {
     return Astro.redirect("/admin");
   }
 }
-
-//const secret = runtime.env.ADMIN_SECRET;
-//const error =
-//  Astro.request.method === "POST"
-//    ? secret
-//      ? "Mot de passe incorrect."
-//      : "ADMIN_SECRET non défini dans .env — redémarrez le serveur."
-//    : null;
 
 const error =
   Astro.request.method === "POST" ? "Mot de passe incorrect." : null;
