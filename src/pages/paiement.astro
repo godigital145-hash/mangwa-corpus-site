@@ -5,10 +5,10 @@ import Footer from "../Componant/Footer";
 import Container from "../Componant/Container";
 import CheckoutPage from "../Componant/CheckoutPage";
 
-const type = Astro.url.searchParams.get("type") as "magazine" | "audio" | null;
+const type = Astro.url.searchParams.get("type") as "magazine" | "audio" | "album" | null;
 const id   = Astro.url.searchParams.get("id");
 
-if (!type || !id || (type !== "magazine" && type !== "audio")) {
+if (!type || !id || (type !== "magazine" && type !== "audio" && type !== "album")) {
   return Astro.redirect("/");
 }
 ---

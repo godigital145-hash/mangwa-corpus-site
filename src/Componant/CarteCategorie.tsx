@@ -11,7 +11,7 @@ export default function CarteCategorie({ titre, description, couleur, background
       className="relative flex-1 min-w-0 flex flex-col justify-end px-6 py-8 aspect-3/4 sm:aspect-auto sm:min-h-105 lg:w-114.25 lg:h-125 overflow-hidden cursor-pointer group"
       style={{ backgroundColor: couleur, backgroundImage: `url(${backgroundImage})` }}
     >
-      <h2 className="text-white karma font-bold text-[26px] sm:text-[30px] leading-tight mb-3 group-hover:underline transition-all w-[60%]">
+      <h2 className="text-white karma font-bold text-[22px] sm:text-[26px] lg:text-[30px] leading-tight mb-3 group-hover:underline transition-all w-[60%]">
         {titre}
       </h2>
       <p className="text-white/90 leading-snug max-w-[260px] text-base">

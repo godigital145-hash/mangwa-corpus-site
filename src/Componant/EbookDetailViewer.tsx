@@ -4,12 +4,6 @@ import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 const MAX_PREVIEW_PAGES = 6;
 
-const DownloadIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 16l-5-5 1.41-1.41L11 13.17V4h2v9.17l2.59-2.58L17 11l-5 5zm-7 4h14v-2H5v2z" />
-  </svg>
-);
-
 const ChevronLeft = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
     <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
@@ -208,7 +202,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
     <div className="flex flex-col gap-12 py-8">
 
       {/* ── Info ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 items-start">
 
         {/* Couverture */}
         <div className="lg:col-span-1 bg-gray-100 aspect-3/4 flex items-center justify-center px-8 py-10">
@@ -249,19 +243,19 @@ export default function EbookDetailViewer({ id }: { id: string }) {
 
           {/* Actions */}
           <div className="flex flex-wrap items-center gap-3 mt-2">
-            {pdfPreviewUrl && (
+            {/* {pdfPreviewUrl && (
               <a
                 href="#extrait"
-                className="flex items-center justify-center bg-[#00bcd4] hover:bg-[#00acc1] transition-colors text-white text-[14px] font-bold px-6 py-3"
+                className="flex items-center justify-center bg-[#00bcd4] hover:bg-[#00acc1] transition-colors text-white text-[12px] sm:text-[14px] font-bold px-6 py-3"
               >
                 Lire l'extrait
               </a>
-            )}
+            )} */}
             {(pdfFileUrl || mag.price != null) && (
               <a
                 href={mag.price ? paymentUrl : pdfFileUrl ?? "#"}
                 {...(mag.price ? {} : { download: true })}
-                className="flex items-center gap-2 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[12px] sm:text-[13px] font-bold"
+                className="flex items-center gap-2 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[12px] sm:text-[14px] font-bold"
               >
                 <span className="px-4 inter sm:px-5 py-2.5">{mag.price ? "Acheter" : "Télécharger"}</span>
                 <span className="px-4 inter sm:px-5 py-2.5 bg-black/20">{mag.price != null ? `${mag.price.toLocaleString("fr-FR")} XAF` : "Gratuit"}</span>

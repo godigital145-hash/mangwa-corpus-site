@@ -46,7 +46,7 @@ export default function SectionEdition() {
         {/* Séparateur */}
 
         {/* Grille 4 colonnes — 1 col mobile, 2 col tablette, 4 col desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[380px] sm:auto-rows-[420px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[300px] sm:auto-rows-[380px] lg:auto-rows-[420px]">
           {articles.map((article) => (
             <CarteEdition
               key={article.nom}

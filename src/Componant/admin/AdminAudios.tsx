@@ -149,6 +149,9 @@ function AlbumsSection({ token }: { token: string }) {
                     <AlbumField label="Genre" name="genre" defaultValue={modal.item?.genre ?? ""} />
                     <AlbumField label="Date de sortie" name="published_at" type="date" defaultValue={modal.item?.published_at?.slice(0, 10) ?? ""} />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <AlbumField label="Prix (XAF)" name="price" type="number" defaultValue={modal.item?.price?.toString() ?? ""} />
+                  </div>
                   <MediaField label="Couverture" name="cover" token={token} currentKey={modal.item?.cover} defaultFolder="albums" />
                   <label className="flex items-center gap-2 text-sm text-gray-700">
                     <input type="checkbox" name="featured" value="true" defaultChecked={!!modal.item?.featured} />
@@ -414,6 +417,14 @@ export default function AdminAudios({ token }: { token: string }) {
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Durée (secondes)" name="duration" type="number" defaultValue={modal.item?.duration?.toString() ?? ""} />
                 <Field label="Prix (FCFA)" name="price" type="number" defaultValue={modal.item?.price?.toString() ?? ""} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-gray-700 font-medium">Fenêtre de prévisualisation</p>
+                <p className="text-xs text-gray-400 mb-1">Laissez vide pour lire l'audio en entier. Sinon, entrez le début et la fin en secondes.</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Début preview (s)" name="preview_start" type="number" defaultValue={modal.item?.preview_start?.toString() ?? ""} />
+                  <Field label="Fin preview (s)" name="preview_end" type="number" defaultValue={modal.item?.preview_end?.toString() ?? ""} />
+                </div>
               </div>
               <Field label="Date de publication" name="published_at" type="date" defaultValue={modal.item?.published_at?.slice(0, 10) ?? ""} />
               <div className="flex gap-4">

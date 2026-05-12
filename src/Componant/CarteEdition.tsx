@@ -27,10 +27,10 @@ export default function CarteEdition({ imageUrl, nom, description, tag }: CarteE
 
       {/* Texte bas-gauche */}
       <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-6 flex flex-col gap-1.5">
-        <h3 className="text-white font-extrabold text-[26px] sm:text-[32px] leading-tight uppercase">
+        <h3 className="text-white font-extrabold text-[20px] sm:text-[24px] lg:text-[28px] leading-tight uppercase">
           {nom}
         </h3>
-        <p className="text-white/90 text-[13px] sm:text-[20px] karma leading-snug h-[80px]">
+        <p className="text-white/90 text-[12px] sm:text-[14px] lg:text-[16px] karma leading-snug line-clamp-3">
           {description}
         </p>
       </div>

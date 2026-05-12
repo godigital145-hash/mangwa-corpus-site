@@ -286,13 +286,12 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
               </button>
             </div>
 
-            {audioUrl && (
+            {album && (
               <a
-                href={audioUrl}
-                download
+                href={`/paiement?type=album&id=${album.id}`}
                 className="flex items-center gap-2 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[12px] sm:text-[13px] font-bold px-4 sm:px-5 py-2.5"
               >
-                Télécharger <DownloadIcon />
+                Acheter l'album <DownloadIcon />
               </a>
             )}
           </div>
@@ -306,9 +305,7 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
         </div>
 
         {/* Panneau droit — Tracklist */}
-        <div className={`lg:w-[45%] bg-[#161616] border-t lg:border-t-0 lg:border-l border-white/10 flex-col px-4 sm:px-6 py-4 overflow-y-auto ${mobileTab === "player" ? "hidden lg:flex" : "flex"}`}
-          style={{ maxHeight: "600px" }}
-        >
+        <div className={`lg:w-[45%] bg-[#161616] border-t lg:border-t-0 lg:border-l border-white/10 flex-col px-4 sm:px-6 py-4 overflow-y-auto max-h-[60vh] lg:max-h-[600px] ${mobileTab === "player" ? "hidden lg:flex" : "flex"}`}>
           <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-3 shrink-0">
             Pistes de l'album
           </p>

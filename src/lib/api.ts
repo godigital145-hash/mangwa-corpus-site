@@ -40,6 +40,8 @@ export type Audio = {
   album_id: number | null
   lyrics: string | null
   waveform: string | null
+  preview_start: number | null
+  preview_end: number | null
   created_at: string
   updated_at: string
 }

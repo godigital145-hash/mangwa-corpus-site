@@ -5,16 +5,18 @@ import react from '@astrojs/react';
 import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
 import cloudflare from '@astrojs/cloudflare';
+import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://mangwacorpus.com',
   output: 'server',
   adapter: cloudflare({
     platformProxy: {
-      enabled: true, // ← c'est ça qui injecte runtime.env en local
+      enabled: true,
     },
   }),
-  integrations: [react()],
+  integrations: [react(), sitemap()],
 
   vite: {
     plugins: [tailwindcss()],

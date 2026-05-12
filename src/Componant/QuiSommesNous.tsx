@@ -20,7 +20,7 @@ export default function QuiSommesNous() {
         </h1>
 
         {/* ── Hero image ── */}
-        <div className="w-full h-[380px] sm:h-[500px] overflow-hidden">
+        <div className="w-full aspect-16/7 overflow-hidden">
           <img
             src={images.hero}
             alt="Mangwa Corpus"
@@ -63,7 +63,7 @@ export default function QuiSommesNous() {
             </p>
           </div>
 
-          <div className="w-full h-[380px] overflow-hidden">
+          <div className="w-full aspect-4/3 overflow-hidden">
             <img
               src={images.mission}
               alt="Notre équipe"
@@ -74,21 +74,21 @@ export default function QuiSommesNous() {
 
         {/* ── Galerie 3 images ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="w-full h-[240px] overflow-hidden">
+          <div className="w-full aspect-4/3 overflow-hidden">
             <img
               src={images.gallery1}
               alt="Édition & Presse"
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="w-full h-[240px] overflow-hidden">
+          <div className="w-full aspect-4/3 overflow-hidden">
             <img
               src={images.gallery2}
               alt="Musique & Audio"
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="w-full h-[240px] overflow-hidden">
+          <div className="w-full aspect-4/3 overflow-hidden">
             <img
               src={images.gallery3}
               alt="Librairie & Savoir"
@@ -99,7 +99,7 @@ export default function QuiSommesNous() {
 
         {/* ── Image gauche / Texte droite ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-          <div className="w-full h-[380px] overflow-hidden">
+          <div className="w-full aspect-4/3 overflow-hidden">
             <img
               src={images.histoire}
               alt="Notre histoire"

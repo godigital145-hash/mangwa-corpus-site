@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { api, adminApi, mediaUrl, type MediaFile } from "../../lib/api";
 
 const FOLDERS = [
@@ -77,7 +78,7 @@ export default function MediaPickerModal({ token, onSelect, onClose, defaultFold
 
   const filtered = filterFolder === "all" ? items : items.filter((m) => m.folder === filterFolder);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col relative">
 
@@ -211,6 +212,7 @@ export default function MediaPickerModal({ token, onSelect, onClose, defaultFold
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

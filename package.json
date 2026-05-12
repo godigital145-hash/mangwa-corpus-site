@@ -16,6 +16,7 @@
     "@astrojs/cloudflare": "^13.5.0",
     "@astrojs/node": "^10.1.0",
     "@astrojs/react": "^5.0.4",
+    "@astrojs/sitemap": "^3.7.2",
     "@nanostores/react": "^1.1.0",
     "@tailwindcss/vite": "^4.2.4",
     "@tiptap/extension-placeholder": "^3.22.5",
@@ -28,6 +29,7 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-pdf": "^10.4.1",
+    "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.2.4"
   },
   "devDependencies": {

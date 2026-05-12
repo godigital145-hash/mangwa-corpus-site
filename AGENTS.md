@@ -483,6 +483,29 @@ try {
 
 ---
 
+# RÈGLES GÉNÉRALES
+
+## 1. Sélection automatique des skills
+- Avant chaque tâche, identifier le skill le plus approprié parmi les skills disponibles
+- Charger le skill avec `skill [nom]` quand nécessaire
+- Skills disponibles : emil-design-eng, impeccable, frontend-design, cloudflare, wrangler, agents-sdk, et autres
+
+## 2. Documents de notes
+- Créer un document de notes au format markdown pour chaque tâche complexe
+- Le document doit contenir : 
+  - État d'avancement (fait / en cours / à faire)
+  - Points déjà résolus
+  - Problèmes identifiés
+  - Prochaines étapes
+
+## 3. Revue du travail existant
+- TOUJOURS examiner le code existant avant de commencer une nouvelle tâche
+- Vérifier les fichiers analogues pour comprendre les conventions
+- Consulter les documents de notes existants
+- Ne pas duplicationner le travail déjà fait
+
+---
+
 # TYPESCRIPT TYPES
 
 ```ts

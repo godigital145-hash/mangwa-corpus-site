@@ -29,7 +29,8 @@ export default function SectionAudio() {
         {/* Bannière hero */}
         <Banniere page="audio" />
         {/* Grille audios — 2 col mobile, 3 col tablette, 5 col desktop */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* CSS masque les éléments >4 sur mobile et >5 sur desktop — sans JS */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 [&>*:nth-child(n+5)]:hidden [&>*:nth-child(n+5)]:lg:block">
           {audios.map((audio) => (
             <a key={audio.id} href={`/audioitem/${audio.id}`} className="flex flex-col gap-2 cursor-pointer group">
               <div className="relative w-full aspect-square bg-[#1c1c1c] flex items-center justify-center overflow-hidden">
@@ -38,7 +39,7 @@ export default function SectionAudio() {
                   : <FluentMusicNote124Filled className="h-20 w-20 text-white" />
                 }
               </div>
-              <p className="text-[13px] sm:text-[20px] font-semibold text-gray-900 group-hover:text-[#00bcd4] transition-colors">
+              <p className="text-[13px] sm:text-[15px] lg:text-[18px] font-semibold text-gray-900 group-hover:text-[#00bcd4] transition-colors">
                 {audio.title}
               </p>
               <p className="text-[14px] text-gray-500">{audio.artist}</p>

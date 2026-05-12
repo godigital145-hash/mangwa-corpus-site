@@ -6,6 +6,7 @@ import { useAudioWaveform } from "../hooks/useAudioWaveform";
 import { useAudioEngine } from "../hooks/useAudioEngine";
 import { audioEngine } from "../utils/audioEngine";
 import { api, mediaUrl, type Audio } from "../lib/api";
+import Titre from "./Titre";
 
 export function FluentPlay32Filled(props: SVGProps<SVGSVGElement>) {
   return (
@@ -42,11 +43,17 @@ function Waveform({
   progress,
   onSeek,
   precomputed,
+  previewStart,
+  previewEnd,
+  totalDuration,
 }: {
   audioUrl: string;
   progress: number;
   onSeek: (ratio: number) => void;
   precomputed?: number[] | null;
+  previewStart?: number | null;
+  previewEnd?: number | null;
+  totalDuration?: number;
 }) {
   const { bars, loading } = useAudioWaveform(audioUrl, BAR_COUNT, precomputed);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -66,13 +73,31 @@ function Waveform({
     const count = bars.length;
     const playedCount = Math.floor(progress * count);
     const barW = w / count;
-    const gap = 0;
+
+    // Compute preview region as bar indices
+    const dur = totalDuration ?? 0;
+    const previewStartBar = dur > 0 && previewStart != null ? Math.floor((previewStart / dur) * count) : 0;
+    const previewEndBar = dur > 0 && previewEnd != null ? Math.floor((previewEnd / dur) * count) : count;
+    const hasPreview = dur > 0 && (previewStart != null || previewEnd != null);
+
     for (let i = 0; i < count; i++) {
       const barH = Math.max(2, (bars[i] / 100) * h);
-      const x = i * (barW + gap);
+      const x = i * barW;
       const y = h - barH;
-      ctx.fillStyle = i < playedCount ? "#00bcd4" : "#6b7280";
-      ctx.globalAlpha = i < playedCount ? 1 : (i < 20 ? 0.9 : 0.55);
+      const inPreview = !hasPreview || (i >= previewStartBar && i < previewEndBar);
+      const played = i < playedCount;
+
+      if (played && inPreview) {
+        ctx.fillStyle = "#00bcd4";
+        ctx.globalAlpha = 1;
+      } else if (inPreview) {
+        ctx.fillStyle = "#a0aec0";
+        ctx.globalAlpha = 0.85;
+      } else {
+        ctx.fillStyle = "#6b7280";
+        ctx.globalAlpha = 0.3;
+      }
+
       ctx.beginPath();
       const r = Math.min(barW / 2, 2);
       if (ctx.roundRect) ctx.roundRect(x, y, barW, barH, r);
@@ -80,7 +105,7 @@ function Waveform({
       ctx.fill();
     }
     ctx.globalAlpha = 1;
-  }, [bars, progress]);
+  }, [bars, progress, previewStart, previewEnd, totalDuration]);
 
   useEffect(() => {
     draw();
@@ -114,7 +139,7 @@ function Waveform({
   );
 }
 
-function TrackRow({ id, titre, artiste, audioUrl, coverUrl, waveformData }: { id: string; titre: string; artiste: string; audioUrl: string; coverUrl?: string | null; waveformData?: number[] | null }) {
+function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, waveformData, previewStart, previewEnd }: { id: string; titre: string; artiste: string; album?: string | null; albumId?: number | null; audioUrl: string; coverUrl?: string | null; waveformData?: number[] | null; previewStart?: number | null; previewEnd?: number | null }) {
   const engine = useAudioEngine();
   const isThisTrack = engine.currentAudioUrl === audioUrl;
   const playing = isThisTrack && engine.playing;
@@ -122,9 +147,16 @@ function TrackRow({ id, titre, artiste, audioUrl, coverUrl, waveformData }: { id
   const currentTime = isThisTrack ? engine.currentTime : 0;
   const duration = isThisTrack ? engine.duration : 0;
 
+  // Times relative to the preview window
+  const ps = previewStart ?? 0;
+  const pe = previewEnd ?? duration;
+  const previewDuration = pe - ps;
+  const previewCurrentTime = Math.max(0, currentTime - ps);
+  const previewProgress = previewDuration > 0 && isThisTrack ? Math.min(1, previewCurrentTime / previewDuration) : 0;
+
   const handlePlay = () => {
     if (!isThisTrack) {
-      audioEngine.loadTrack(audioUrl, { id, titre, artiste }).then(() => audioEngine.play());
+      audioEngine.loadTrack(audioUrl, { id, titre, artiste, previewStart, previewEnd }).then(() => audioEngine.play());
     } else {
       audioEngine.toggle();
     }
@@ -135,9 +167,9 @@ function TrackRow({ id, titre, artiste, audioUrl, coverUrl, waveformData }: { id
   };
 
   return (
-    <div className="bg-[#1c1c1c] overflow-hidden grid lg:grid-cols-5">
+    <div className="bg-[#1c1c1c] overflow-hidden flex sm:grid sm:grid-cols-5">
       {/* Thumbnail */}
-      <div className="w-22.5 sm:w-full shrink-0 bg-[#111] flex items-center justify-center aspect-square overflow-hidden">
+      <div className="w-24 sm:w-auto shrink-0 bg-[#111] flex items-center justify-center aspect-square overflow-hidden">
         {coverUrl
           ? <img src={coverUrl} alt={titre} className="w-full h-full object-cover" />
           : <FluentMusicNote124Filled className="w-25 h-25 text-gray-600" />
@@ -150,10 +182,18 @@ function TrackRow({ id, titre, artiste, audioUrl, coverUrl, waveformData }: { id
           {/* Title + play */}
           <div className="flex items-center gap-3 mb-2">
             <div>
-              <p className="text-white font-semibold text-[16px] sm:text-[20px] leading-tight">{titre}</p>
-              <p className="text-gray-500 text-[13px]">
-                {duration > 0 ? `${formatTime(currentTime)} / ${formatTime(duration)}` : artiste}
-              </p>
+              <p className="text-white font-semibold text-[14px] sm:text-[16px] lg:text-[18px] leading-tight">{titre}</p>
+              {album && albumId ? (
+                <a href={`/album/${albumId}`} className="text-[#00bcd4] text-[12px] sm:text-[13px] hover:underline font-medium">
+                  {album}
+                </a>
+              ) : (
+                <p className="text-gray-500 text-[13px]">
+                  {isThisTrack && duration > 0
+                    ? `${formatTime(previewCurrentTime)} / ${formatTime(previewDuration > 0 ? previewDuration : duration)}`
+                    : artiste}
+                </p>
+              )}
             </div>
             <button
               onClick={handlePlay}
@@ -168,7 +208,15 @@ function TrackRow({ id, titre, artiste, audioUrl, coverUrl, waveformData }: { id
           </div>
 
           {/* Waveform cliquable */}
-          <Waveform audioUrl={audioUrl} progress={progress} onSeek={seek} precomputed={waveformData} />
+          <Waveform
+            audioUrl={audioUrl}
+            progress={progress}
+            onSeek={seek}
+            precomputed={waveformData}
+            previewStart={previewStart}
+            previewEnd={previewEnd}
+            totalDuration={duration || undefined}
+          />
 
           {/* Barre de progression */}
           <div
@@ -180,13 +228,13 @@ function TrackRow({ id, titre, artiste, audioUrl, coverUrl, waveformData }: { id
           >
             <div
               className="h-full bg-[#00bcd4] rounded-full transition-all"
-              style={{ width: `${progress * 100}%` }}
+              style={{ width: `${previewProgress * 100}%` }}
             />
           </div>
         </div>
 
         {/* Buttons */}
-        <div className="w-52.5 h-full p-4 flex flex-col justify-end">
+        <div className="hidden sm:flex w-36 lg:w-48 h-full p-4 flex-col justify-end">
           <div className="flex flex-col gap-4">
             <a
               href={`/audioitem/${id}`}
@@ -195,8 +243,7 @@ function TrackRow({ id, titre, artiste, audioUrl, coverUrl, waveformData }: { id
               Lyrics
             </a>
             <a
-              href={audioUrl}
-              download
+              href={`/paiement?type=audio&id=${id}`}
               className="flex items-center justify-center gap-1.5 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[12px] sm:text-[16px] font-bold px-5 sm:px-8 whitespace-nowrap py-2"
             >
               Télécharger <DownloadIcon />
@@ -225,9 +272,8 @@ export default function ListeAudio() {
   return (
     <section className="w-full mt-8">
       <Container>
-        <p className="text-[13px] text-gray-500 uppercase tracking-widest font-medium mb-4">
-          Derniere sortie
-        </p>
+        <Titre titre="Dernière sortie" />
+
         {loading && (
           <div className="flex flex-col gap-3">
             {[1, 2].map((i) => (
@@ -242,9 +288,13 @@ export default function ListeAudio() {
               id={String(audio.id)}
               titre={audio.title}
               artiste={audio.artist}
+              album={audio.album}
+              albumId={audio.album_id}
               audioUrl={mediaUrl(audio.audio_file) ?? ''}
               coverUrl={mediaUrl(audio.cover)}
               waveformData={audio.waveform ? (JSON.parse(audio.waveform) as number[]) : null}
+              previewStart={audio.preview_start}
+              previewEnd={audio.preview_end}
             />
           ))}
         </div>

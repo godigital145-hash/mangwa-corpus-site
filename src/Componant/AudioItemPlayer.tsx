@@ -16,11 +16,6 @@ function formatTime(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-const DownloadIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 16l-5-5 1.41-1.41L11 13.17V4h2v9.17l2.59-2.58L17 11l-5 5zm-7 4h14v-2H5v2z" />
-  </svg>
-);
 
 function Waveform({ audioUrl, progress, onSeek }: { audioUrl: string; progress: number; onSeek: (r: number) => void }) {
   const { bars, loading } = useAudioWaveform(audioUrl, BAR_COUNT);
@@ -390,11 +385,10 @@ export default function AudioItemPlayer({ id }: { id: string }) {
 
             {audioUrl && (
               <a
-                href={audioUrl}
-                download
+                href={`/paiement?type=audio&id=${audio.id}`}
                 className="flex items-center gap-2 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[12px] sm:text-[13px] font-bold "
               >
-                <span className="px-4 inter sm:px-5 py-2.5">Télecharger</span>
+                <span className="px-4 inter sm:px-5 py-2.5">Télécharger</span>
                 <span className="px-4 inter sm:px-5 py-2.5 bg-black/20">{Intl.NumberFormat("fr-FR", { style: "currency", currency: "XAF" }).format(Number(audio.price))}</span>
               </a>
             )}
@@ -411,8 +405,7 @@ export default function AudioItemPlayer({ id }: { id: string }) {
 
         {/* Panneau droit — Lyrics */}
         <div
-          className={`lg:w-[45%] bg-white border-t lg:border-t-0 lg:border-l border-gray-100 flex-col px-6 sm:px-8 py-6 overflow-hidden ${mobileTab === "player" ? "hidden lg:flex" : "flex"}`}
-          style={{ maxHeight: "600px" }}
+          className={`lg:w-[45%] bg-white border-t lg:border-t-0 lg:border-l border-gray-100 flex-col px-6 sm:px-8 py-6 overflow-hidden max-h-[60vh] lg:max-h-150 ${mobileTab === "player" ? "hidden lg:flex" : "flex"}`}
         >
           <h3 className="text-[13px] text-gray-400 uppercase tracking-widest font-medium mb-4 shrink-0">
             Paroles

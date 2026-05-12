@@ -32,15 +32,15 @@ export default function ListeEditions() {
     <section className="w-full mt-10">
       <Container>
         <div className="flex flex-col divide-y divide-gray-200">
-          {magazines.slice(0, 5).map((mag) => (
+          {magazines.slice(0, 3).map((mag) => (
             <div
               key={mag.id}
               className="grid grid-cols-1 sm:grid-cols-4 sm:gap-6 py-6 items-start"
             >
               {/* Couverture */}
-              <div className="shrink-0 w-full sm:w-full h-[341px] flex justify-center items-center bg-gray-100">
+              <div className="shrink-0 w-full aspect-3/4 flex justify-center items-center bg-gray-100">
                 {mediaUrl(mag.cover) ? (
-                  <img src={mediaUrl(mag.cover)!} alt={mag.title} className="w-[55%] object-contain" />
+                  <img src={mediaUrl(mag.cover)!} alt={mag.title} className="w-[85%] h-full object-contain" />
                 ) : (
                   <div className="w-[55%] h-full bg-gray-200 flex items-center justify-center text-gray-400 text-sm">Pas de couverture</div>
                 )}
@@ -55,13 +55,13 @@ export default function ListeEditions() {
                   <h3 className="font-extrabold text-[18px] inter sm:text-[24px] text-gray-900 uppercase leading-tight mb-4">
                     {mag.title}
                   </h3>
-                  {mag.subtitle && <p className="text-[20px] text-gray-600 mt-0.5">{mag.subtitle}</p>}
-                  {mag.description && <p className="text-[20px] text-gray-500 mt-2 line-clamp-4">{mag.description}</p>}
+                  {mag.subtitle && <p className="text-[14px] sm:text-[20px] text-gray-600 mt-0.5">{mag.subtitle}</p>}
+                  {mag.description && <p className="text-[14px] sm:text-[20px] text-gray-500 mt-2 line-clamp-4">{mag.description}</p>}
                 </div>
 
                 {/* Infos */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[20px] text-gray-400 uppercase tracking-widest font-medium mb-2">
+                  <p className="text-[13px] sm:text-[15px] text-gray-400 uppercase tracking-widest font-medium mb-2">
                     Détails
                   </p>
                   <ul className="flex flex-col gap-2.5 text-[16px] text-gray-700">
@@ -84,8 +84,7 @@ export default function ListeEditions() {
                   )}
                   {mag.pdf_file && (
                     <a
-                      href={mediaUrl(mag.pdf_file) ?? '#'}
-                      target="_blank"
+                      href={`/paiement?type=magazine&id=${mag.id}`}
                       className="flex items-center justify-center gap-2 bg-[#6dbe6d] hover:bg-[#5cb85c] transition-colors text-white text-[16px] font-bold px-4 py-2.5 whitespace-nowrap"
                     >
                       Télécharger <DownloadIcon />

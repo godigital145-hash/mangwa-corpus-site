@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { api, mediaUrl, type Magazine, type Audio } from "../lib/api";
+import { api, mediaUrl, type Magazine, type Audio, type Album } from "../lib/api";
 
 const API_URL = import.meta.env.PUBLIC_API_URL ?? "https://serveur.mangwacorpus.com";
 
 type PaymentMethod = { id: string; name: string; type: string };
-type EntityType = "magazine" | "audio";
+type EntityType = "magazine" | "audio" | "album";
 type Item = { id: string | number; title: string; cover: string | null; price: number | null; subtitle?: string | null };
 
 function formatPrice(price: number | null) {
@@ -36,13 +36,21 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
             price: m.price,
             subtitle: m.subtitle,
           }))
-        : api.audio(id).then((a: Audio) => ({
-            id: a.id,
-            title: a.title,
-            cover: a.cover,
-            price: a.price,
-            subtitle: a.artist,
-          }));
+        : type === "album"
+          ? api.album(id).then((a: Album & { tracks: any[] }) => ({
+              id: a.id,
+              title: a.title,
+              cover: a.cover,
+              price: a.price,
+              subtitle: a.artist,
+            }))
+          : api.audio(id).then((a: Audio) => ({
+              id: a.id,
+              title: a.title,
+              cover: a.cover,
+              price: a.price,
+              subtitle: a.artist,
+            }));
 
     Promise.all([
       fetchItem,
@@ -133,6 +141,11 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
         >
           ← Continuer à parcourir
         </a>
+        {type === "album" && (
+          <a href={`/album/${id}`} className="text-gray-400 text-[13px] hover:underline">
+            ← Retour à l'album
+          </a>
+        )}
       </div>
     );
   }
@@ -143,7 +156,7 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-[13px] text-gray-400">
         <a href={type === "magazine" ? "/ebook" : "/audio"} className="hover:text-gray-700 transition-colors">
-          {type === "magazine" ? "E-Books" : "Audios"}
+          {type === "magazine" ? "E-Books" : type === "album" ? "Albums" : "Audios"}
         </a>
         <span>/</span>
         <span className="text-gray-700 font-medium">{item.title}</span>
@@ -161,7 +174,7 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
         }
         <div className="flex-1 min-w-0">
           <p className="text-[11px] text-[#00bcd4] uppercase tracking-widest font-semibold mb-0.5">
-            {type === "magazine" ? "Magazine" : "Audio"}
+            {type === "magazine" ? "Magazine" : type === "album" ? "Album" : "Audio"}
           </p>
           <p className="text-[15px] font-bold text-gray-900 truncate">{item.title}</p>
           {item.subtitle && <p className="text-[13px] text-gray-500 truncate">{item.subtitle}</p>}

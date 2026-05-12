@@ -5,6 +5,8 @@ interface TrackMeta {
   titre: string;
   artiste: string;
   coverUrl?: string;
+  previewStart?: number | null;
+  previewEnd?: number | null;
 }
 
 class AudioEngine {
@@ -22,6 +24,8 @@ class AudioEngine {
   duration = 0;
   currentTrack: TrackMeta | null = null;
   currentAudioUrl: string | null = null;
+  previewStart: number | null = null;
+  previewEnd: number | null = null;
 
   subscribe(fn: Listener) {
     this.listeners.add(fn);
@@ -38,16 +42,17 @@ class AudioEngine {
   }
 
   async loadTrack(audioUrl: string, meta: TrackMeta) {
-    console.log("loadTrack", audioUrl);
     if (this.currentAudioUrl === audioUrl) return;
 
     this.stopSource();
     this.playing = false;
-    this._offset = 0;
     this.progress = 0;
     this.currentTime = 0;
     this.currentAudioUrl = audioUrl;
     this.currentTrack = meta;
+    this.previewStart = meta.previewStart ?? null;
+    this.previewEnd = meta.previewEnd ?? null;
+    this._offset = this.previewStart ?? 0;
     this.notify();
 
     const ctx = this.getCtx();
@@ -58,6 +63,8 @@ class AudioEngine {
       this.bufferCache.set(audioUrl, decoded);
     }
     this.duration = this.bufferCache.get(audioUrl)!.duration;
+    this.currentTime = this._offset;
+    this.progress = this._offset / this.duration;
     this.notify();
   }
 
@@ -106,6 +113,8 @@ class AudioEngine {
     this.currentTime = 0;
     this.duration = 0;
     this._offset = 0;
+    this.previewStart = null;
+    this.previewEnd = null;
     this.notify();
   }
 
@@ -114,9 +123,13 @@ class AudioEngine {
     if (!url) return;
     const buf = this.bufferCache.get(url);
     if (!buf) return;
-    this._offset = ratio * buf.duration;
-    this.progress = ratio;
-    this.currentTime = this._offset;
+    const ps = this.previewStart ?? 0;
+    const pe = this.previewEnd ?? buf.duration;
+    // ratio is 0-1 of full buffer; clamp to preview window
+    const newTime = Math.max(ps, Math.min(pe, ratio * buf.duration));
+    this._offset = newTime;
+    this.progress = newTime / buf.duration;
+    this.currentTime = newTime;
     if (this.playing) this.play();
     else this.notify();
   }
@@ -137,17 +150,20 @@ class AudioEngine {
     if (!ctx || !buf) return;
 
     const elapsed = this._offset + (ctx.currentTime - this.startTime);
-    const clamped = Math.min(elapsed, buf.duration);
+    const end = this.previewEnd ?? buf.duration;
+    const clamped = Math.min(elapsed, end);
     this.currentTime = clamped;
     this.progress = clamped / buf.duration;
     this.notify();
 
-    if (clamped < buf.duration) {
+    if (clamped < end) {
       this.rafId = requestAnimationFrame(this.tick);
     } else {
       this.playing = false;
-      this.progress = 1;
-      this._offset = 0;
+      this.progress = end / buf.duration;
+      // reset to preview start for next play
+      this._offset = this.previewStart ?? 0;
+      this.currentTime = this._offset;
       this.notify();
     }
   };
@@ -160,6 +176,8 @@ const ssrStub = {
   duration: 0,
   currentTrack: null,
   currentAudioUrl: null,
+  previewStart: null,
+  previewEnd: null,
   subscribe: (_: () => void) => () => {},
   loadTrack: async (_url: string, _meta: TrackMeta) => {},
   play: () => {},
