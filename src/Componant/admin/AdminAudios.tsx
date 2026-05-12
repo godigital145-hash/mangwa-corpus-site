@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api, adminApi, mediaUrl, type Audio, type Album, type AlbumTrack } from "../../lib/api";
+import { api, adminApi, mediaUrl, type Audio, type Album } from "../../lib/api";
 import { decodeWaveform } from "../../utils/audioWaveform";
 import MediaField from "./MediaField";
 
@@ -13,9 +13,7 @@ function AlbumsSection({ token }: { token: string }) {
   const [modal, setModal] = useState<{ open: boolean; item?: Album; tab: AlbumTab }>({ open: false, tab: "info" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tracks, setTracks] = useState<AlbumTrack[]>([]);
   const [allAudios, setAllAudios] = useState<Audio[]>([]);
-  const [search, setSearch] = useState("");
 
   const reload = () =>
     api.albums().then(setAlbums).catch(() => setError("Erreur albums")).finally(() => setLoading(false));
@@ -24,9 +22,6 @@ function AlbumsSection({ token }: { token: string }) {
 
   function openModal(item?: Album) {
     setModal({ open: true, item, tab: "info" });
-    setTracks([]);
-    setSearch("");
-    if (item) adminApi(token).albums.tracks(item.id).then(setTracks);
     if (allAudios.length === 0) api.audios().then(setAllAudios);
   }
 
@@ -39,12 +34,8 @@ function AlbumsSection({ token }: { token: string }) {
     try {
       if (modal.item) {
         await a.albums.update(modal.item.id, form);
-        await a.albums.setTracks(modal.item.id, tracks.map((t, i) => ({ audio_id: t.audio_id, track_order: i })));
       } else {
-        const res = await a.albums.create(form);
-        const { id } = await res.json() as { id: number };
-        if (tracks.length > 0)
-          await a.albums.setTracks(id, tracks.map((t, i) => ({ audio_id: t.audio_id, track_order: i })));
+        await a.albums.create(form);
       }
       await reload();
       setModal({ open: false, tab: "info" });
@@ -61,33 +52,6 @@ function AlbumsSection({ token }: { token: string }) {
     setAlbums((prev) => prev.filter((a) => a.id !== id));
   }
 
-  function addTrack(audio: Audio) {
-    if (tracks.find((t) => t.audio_id === audio.id)) return;
-    setTracks((prev) => [...prev, {
-      audio_id: audio.id, track_order: prev.length,
-      title: audio.title, artist: audio.artist, cover: audio.cover,
-      audio_file: audio.audio_file, duration: audio.duration, free: audio.free,
-    }]);
-  }
-
-  function removeTrack(audioId: number) {
-    setTracks((prev) => prev.filter((t) => t.audio_id !== audioId));
-  }
-
-  function moveTrack(index: number, dir: -1 | 1) {
-    setTracks((prev) => {
-      const next = [...prev];
-      const swap = index + dir;
-      if (swap < 0 || swap >= next.length) return prev;
-      [next[index], next[swap]] = [next[swap], next[index]];
-      return next;
-    });
-  }
-
-  const filtered = allAudios.filter((a) =>
-    !tracks.find((t) => t.audio_id === a.id) &&
-    (a.title.toLowerCase().includes(search.toLowerCase()) || (a.artist ?? "").toLowerCase().includes(search.toLowerCase()))
-  );
 
   return (
     <section className="mb-10">
@@ -170,7 +134,7 @@ function AlbumsSection({ token }: { token: string }) {
                   onClick={() => setModal((m) => ({ ...m, tab: t }))}
                   className={`py-3 px-4 text-sm font-medium border-b-2 -mb-px transition-colors duration-150 ${modal.tab === t ? "border-[#00bcd4] text-[#00bcd4]" : "border-transparent text-gray-500 hover:text-gray-700"}`}
                 >
-                  {t === "info" ? "Informations" : `Pistes (${tracks.length})`}
+                  {t === "info" ? "Informations" : `Pistes (${modal.item ? allAudios.filter((a) => String(a.album_id) === String(modal.item!.id)).length : 0})`}
                 </button>
               ))}
             </div>
@@ -199,64 +163,35 @@ function AlbumsSection({ token }: { token: string }) {
 
               {modal.tab === "tracks" && (
                 <div className="flex flex-col gap-4">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pistes de l'album</p>
-                    {tracks.length === 0 ? (
-                      <p className="text-sm text-gray-400 py-4 text-center">Aucune piste — ajoutez des titres ci-dessous</p>
+                  <p className="text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+                    Les pistes sont automatiquement celles dont le champ <strong>Album</strong> est défini sur cet album.
+                    Pour ajouter ou retirer une piste, modifiez le champ Album de l'audio concerné.
+                  </p>
+                  {(() => {
+                    const albumTracks = modal.item
+                      ? allAudios.filter((a) => String(a.album_id) === String(modal.item!.id))
+                      : [];
+                    return albumTracks.length === 0 ? (
+                      <p className="text-sm text-gray-400 py-4 text-center">
+                        Aucun audio lié à cet album pour l'instant.
+                      </p>
                     ) : (
                       <div className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
-                        {tracks.map((t, i) => (
-                          <div key={t.audio_id} className="flex items-center gap-3 px-3 py-2 bg-white">
+                        {albumTracks.map((a, i) => (
+                          <div key={a.id} className="flex items-center gap-3 px-3 py-2 bg-white">
                             <span className="text-xs text-gray-400 w-5 text-right shrink-0">{i + 1}</span>
-                            {t.cover
-                              ? <img src={mediaUrl(t.cover) ?? ""} alt="" className="w-8 h-8 object-cover rounded shrink-0" />
+                            {a.cover
+                              ? <img src={mediaUrl(a.cover) ?? ""} alt="" className="w-8 h-8 object-cover rounded shrink-0" />
                               : <div className="w-8 h-8 bg-gray-200 rounded shrink-0" />}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate mb-2">{t.title}</p>
-                              {t.artist && <p className="text-xs text-gray-500 truncate">{t.artist}</p>}
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <button type="button" onClick={() => moveTrack(i, -1)} disabled={i === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors duration-100">▲</button>
-                              <button type="button" onClick={() => moveTrack(i, 1)} disabled={i === tracks.length - 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors duration-100">▼</button>
-                              <button type="button" onClick={() => removeTrack(t.audio_id)} className="p-1 text-red-400 hover:text-red-600 ml-1 transition-colors duration-100">✕</button>
+                              <p className="text-sm font-medium text-gray-900 truncate">{a.title}</p>
+                              {a.artist && <p className="text-xs text-gray-500 truncate">{a.artist}</p>}
                             </div>
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Ajouter des titres</p>
-                    <input
-                      type="text"
-                      placeholder="Rechercher un titre ou artiste…"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-2 focus:outline-none focus:border-[#00bcd4] transition-colors duration-150"
-                    />
-                    <div className="max-h-48 overflow-y-auto divide-y divide-gray-100 border border-gray-200 rounded-lg">
-                      {filtered.slice(0, 30).map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          onClick={() => addTrack(a)}
-                          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 text-left transition-colors duration-100"
-                        >
-                          {a.cover
-                            ? <img src={mediaUrl(a.cover) ?? ""} alt="" className="w-8 h-8 object-cover rounded shrink-0" />
-                            : <div className="w-8 h-8 bg-gray-200 rounded shrink-0" />}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">{a.title}</p>
-                            {a.artist && <p className="text-xs text-gray-500 truncate">{a.artist}</p>}
-                          </div>
-                          <span className="text-xs text-[#00bcd4] font-medium shrink-0">+ Ajouter</span>
-                        </button>
-                      ))}
-                      {filtered.length === 0 && (
-                        <p className="text-sm text-gray-400 py-4 text-center">Aucun résultat</p>
-                      )}
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
               )}
 
