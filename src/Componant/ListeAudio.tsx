@@ -195,7 +195,7 @@ function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, prev
   );
 }
 
-const INITIAL_COUNT = 10;
+const INITIAL_COUNT = 3;
 const PAGE_SIZE = 10;
 
 export default function ListeAudio() {
@@ -246,17 +246,6 @@ export default function ListeAudio() {
             />
           ))}
         </div>
-
-        {hasMore && (
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-              className="bg-white/10 hover:bg-white/20 text-white text-[14px] font-semibold px-8 py-3 transition-colors"
-            >
-              Voir plus ({audios.length - visibleCount} restants)
-            </button>
-          </div>
-        )}
       </Container>
     </section>
   );
