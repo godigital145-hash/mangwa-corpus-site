@@ -89,10 +89,10 @@ function AlbumsSection({ token }: { token: string }) {
               <div className="aspect-square rounded-lg overflow-hidden bg-gray-200 mb-2">
                 {album.cover
                   ? <img
-                      src={mediaUrl(album.cover) ?? ""}
-                      alt={album.title}
-                      className="w-full h-full object-cover transition-transform duration-200 ease-out group-hover:scale-[1.03]"
-                    />
+                    src={mediaUrl(album.cover) ?? ""}
+                    alt={album.title}
+                    className="w-full h-full object-cover transition-transform duration-200 ease-out group-hover:scale-[1.03]"
+                  />
                   : <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl
                       transition-transform duration-200 ease-out group-hover:scale-[1.03]">♫</div>
                 }
@@ -248,7 +248,7 @@ export default function AdminAudios({ token }: { token: string }) {
         setWaveformStatus("computing");
         const url = mediaUrl(audioKey);
         if (url) {
-          const bars = await decodeWaveform(url, 200);
+          const bars = await decodeWaveform(url, 2000);
           form.set("waveform", JSON.stringify(Array.from(bars)));
         }
       } catch {
