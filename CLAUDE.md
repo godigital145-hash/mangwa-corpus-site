@@ -46,6 +46,27 @@ Tous les composants publics ont été mis à jour pour respecter les règles res
 | `AlbumDetailPlayer.tsx` | `max-h-[60vh] lg:max-h-[600px]` au lieu de `style={{ maxHeight }}` |
 | `AudioItemPlayer.tsx` | Idem + suppression `DownloadIcon` inutilisé |
 
+### Session 7 — Preview loop + paywall + validation waveform serveur
+
+#### Lecture en boucle de la fenêtre de preview + écran de paiement
+- **`src/utils/audioEngine.ts`** : ajout de `previewDidComplete: boolean` (public) et `_restartForLoop()` (privé)
+  - `tick()` : quand `clamped >= previewEnd`, remet `_offset = previewStart`, passe `previewDidComplete = true`, appelle `_restartForLoop()` (boucle sans reset du flag)
+  - `play()`, `loadTrack()`, `close()` : reset `previewDidComplete = false`
+  - `TrackMeta` : ajout de `isPaid?: boolean`
+- **`src/Componant/ListeAudio.tsx`** : `paywallShownRef` + `useEffect` sur `engine.previewDidComplete` → affiche paywall overlay après la première boucle si `isPaid`
+- **`src/Componant/StickyPlayer.tsx`** : même logique, deux modes d'affichage (paywall / normal), hooks déplacés avant le `return null` conditionnel
+- **`src/Componant/AudioItemPlayer.tsx`** : paywall overlay + preview-relative time/progress + waveform 3 zones
+- **`src/Componant/AlbumDetailPlayer.tsx`** : idem, paywall dit "Achetez l'album" → `/paiement?type=album&id=...`
+- **`src/lib/api.ts`** : `AlbumTrack` étendu avec `price`, `preview_start`, `preview_end`
+- **`serveur/src/routes/albums.ts`** : SQL SELECT inclut `preview_start`, `preview_end`, `price`
+
+#### Validation waveform côté serveur (seuil 2000 barres)
+- **`serveur/src/routes/audios.ts`** et **`serveur/src/routes/albums.ts`** : ajout de `validateWaveform()` helper
+  - Parse le JSON `waveform`, vérifie `Array.length >= 2000`
+  - Si < 2000 ou JSON invalide → retourne `waveform: null`
+  - Appliqué sur toutes les routes GET (liste, détail, pistes d'album)
+- **Règle** : le champ `waveform` n'est affiché que s'il contient exactement 2000 barres ou plus. Toujours générer avec `decodeWaveform(url, 2000)` dans `AdminAudios.tsx`
+
 ### Session 6 — Preview audio + lien album + paiement album
 - **Fenêtre de prévisualisation audio** : les champs `preview_start` et `preview_end` (secondes) stockés en base dans la table `audios`
   - `serveur/utils/tables.ts` : type `Audio` + `audioSchema` mis à jour, migrations `addColumnIfNotExists` ajoutées
@@ -78,15 +99,32 @@ Tous les composants publics ont été mis à jour pour respecter les règles res
 
 ### AudioEngine (`src/utils/audioEngine.ts`)
 Singleton global. Méthodes principales :
-- `loadTrack(url, meta)` : charge le buffer, applique `previewStart`/`previewEnd` depuis `meta`
-- `play()` / `pause()` / `toggle()` / `seek(ratio)`
+- `loadTrack(url, meta)` : charge le buffer, applique `previewStart`/`previewEnd`/`isPaid` depuis `meta`
+- `play()` / `pause()` / `toggle()` / `seek(ratio)` / `close()`
 - `previewStart: number | null` / `previewEnd: number | null` — exposés publiquement
+- `previewDidComplete: boolean` — passe à `true` après la première boucle de preview, reset par `play()`/`loadTrack()`/`close()`
 
-Fenêtre de preview :
+Fenêtre de preview (loop + paywall) :
+- `tick()` : quand `clamped >= previewEnd` → remet `_offset = previewStart`, `previewDidComplete = true`, appelle `_restartForLoop()` (boucle infinie)
+- `_restartForLoop()` : identique à `play()` SAUF qu'il ne reset pas `previewDidComplete`
 - `seek(ratio)` clamp dans `[previewStart, previewEnd]`
-- `tick()` s'arrête à `previewEnd` et remet `_offset = previewStart` pour la prochaine lecture
-- Progress exposé = position absolue dans le fichier (0–1), la waveform utilise cette valeur
+- Progress exposé = position absolue dans le fichier (0–1)
 - `previewProgress = (currentTime - previewStart) / (previewEnd - previewStart)` — calculé dans les composants pour l'affichage UI
+
+Pattern paywall dans les composants :
+```tsx
+const paywallShownRef = useRef(false);
+// Reset au changement de piste
+useEffect(() => { paywallShownRef.current = false; setShowPaywall(false); }, [engine.currentAudioUrl]);
+// Déclencher après la première boucle
+useEffect(() => {
+  if (engine.previewDidComplete && !paywallShownRef.current && isPaid) {
+    paywallShownRef.current = true;
+    setShowPaywall(true);
+  }
+}, [engine.previewDidComplete]);
+// Replay : reset ref + appel audioEngine.play() qui reset previewDidComplete
+```
 
 ### Waveform 3 zones (`ListeAudio.tsx`)
 Quand `previewStart` et `previewEnd` sont définis :
@@ -199,3 +237,4 @@ h-[280px] sm:h-[360px] md:h-[455px]
 - Hydratation Astro : utiliser `client:load` pour tous les composants React interactifs
 - Migrations DB : utiliser `orm.addColumnIfNotExists` dans `initDatabase()` de `serveur/utils/tables.ts`
 - Types partagés front/back : `src/lib/api.ts` pour le frontend, `serveur/utils/tables.ts` pour le serveur
+- **Waveform** : toujours générer avec `decodeWaveform(url, 2000)` (2000 barres). Le serveur invalide tout `waveform` avec moins de 2000 barres en le remplaçant par `null` via `validateWaveform()` dans `audios.ts` et `albums.ts`

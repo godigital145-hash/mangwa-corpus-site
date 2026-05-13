@@ -16,7 +16,7 @@ function formatTime(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-function Waveform({
+export function Waveform({
   audioUrl, progress, onSeek, previewStart, previewEnd, totalDuration,
 }: {
   audioUrl: string; progress: number; onSeek: (r: number) => void;
@@ -380,7 +380,7 @@ export default function AudioItemPlayer({ id }: { id: string }) {
           {showPaywall && isPaid && (
             <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center gap-4 z-10 px-6">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="#00bcd4">
-                <path d="M12 1C8.676 1 6 3.676 6 7v1H4v15h16V8h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v1H8V7c0-2.276 1.724-4 4-4zm0 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
+                <path d="M12 1C8.676 1 6 3.676 6 7v1H4v15h16V8h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v1H8V7c0-2.276 1.724-4 4-4zm0 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
               </svg>
               <div className="text-center">
                 <p className="text-white text-[16px] font-bold">Prévisualisation terminée</p>

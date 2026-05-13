@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../Componant/Header";
 import ListeAudio from "../Componant/ListeAudio";
 import NosCompositions from "../Componant/NosCompositions";
+import SectionAlbums from "../Componant/SectionAlbums";
 import Footer from "../Componant/Footer";
 import Container from "../Componant/Container";
 import audioBg from "../assets/audio.png";
@@ -27,6 +28,7 @@ import PageLoader from "../Componant/PageLoader";
   <!-- Hero banner -->
 
   <ListeAudio client:load />
+  <SectionAlbums client:load />
   <NosCompositions client:load />
   <Footer client:load />
 </Layout>
