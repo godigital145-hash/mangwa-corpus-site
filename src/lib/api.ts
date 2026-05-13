@@ -151,6 +151,9 @@ export type AlbumTrack = {
   audio_file: string | null
   duration: number | null
   free: number
+  price: number | null
+  preview_start: number | null
+  preview_end: number | null
 }
 
 export type ActivityEntry = {

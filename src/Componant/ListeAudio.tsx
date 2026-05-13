@@ -30,7 +30,7 @@ const DownloadIcon = () => (
   </svg>
 );
 
-const BAR_COUNT = typeof window !== "undefined" && window.innerWidth < 640 ? 120 : 237;
+const BAR_COUNT = typeof window !== "undefined" && window.innerWidth < 640 ? 1000 : 2000;
 
 function formatTime(s: number) {
   const m = Math.floor(s / 60);
@@ -92,7 +92,7 @@ function Waveform({
         ctx.globalAlpha = 1;
       } else if (inPreview) {
         ctx.fillStyle = "#a0aec0";
-        ctx.globalAlpha = 0.85;
+        ctx.globalAlpha = 0.55;
       } else {
         ctx.fillStyle = "#6b7280";
         ctx.globalAlpha = 0.3;
@@ -139,13 +139,36 @@ function Waveform({
   );
 }
 
-function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, waveformData, previewStart, previewEnd }: { id: string; titre: string; artiste: string; album?: string | null; albumId?: number | null; audioUrl: string; coverUrl?: string | null; waveformData?: number[] | null; previewStart?: number | null; previewEnd?: number | null }) {
+function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, waveformData, previewStart, previewEnd, price, free }: { id: string; titre: string; artiste: string; album?: string | null; albumId?: number | null; audioUrl: string; coverUrl?: string | null; waveformData?: number[] | null; previewStart?: number | null; previewEnd?: number | null; price?: number | null; free?: number }) {
   const engine = useAudioEngine();
   const isThisTrack = engine.currentAudioUrl === audioUrl;
   const playing = isThisTrack && engine.playing;
   const progress = isThisTrack ? engine.progress : 0;
   const currentTime = isThisTrack ? engine.currentTime : 0;
   const duration = isThisTrack ? engine.duration : 0;
+
+  const isPaid = (price ?? 0) > 0 && (free ?? 0) !== 1;
+  const [showPaywall, setShowPaywall] = useState(false);
+  const paywallShownRef = useRef(false);
+
+  // Show paywall after first preview loop completes
+  useEffect(() => {
+    if (!isPaid || !isThisTrack) {
+      paywallShownRef.current = false;
+      return;
+    }
+    if (engine.previewDidComplete && !paywallShownRef.current) {
+      paywallShownRef.current = true;
+      setShowPaywall(true);
+    }
+  }, [engine.previewDidComplete, isPaid, isThisTrack]);
+
+  useEffect(() => {
+    if (!isThisTrack) {
+      setShowPaywall(false);
+      paywallShownRef.current = false;
+    }
+  }, [isThisTrack]);
 
   // Times relative to the preview window
   const ps = previewStart ?? 0;
@@ -155,11 +178,25 @@ function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, wave
   const previewProgress = previewDuration > 0 && isThisTrack ? Math.min(1, previewCurrentTime / previewDuration) : 0;
 
   const handlePlay = () => {
+    if (isPaid && previewStart == null && previewEnd == null) {
+      window.location.href = `/paiement?type=audio&id=${id}`;
+      return;
+    }
+    setShowPaywall(false);
+    paywallShownRef.current = false;
     if (!isThisTrack) {
-      audioEngine.loadTrack(audioUrl, { id, titre, artiste, previewStart, previewEnd }).then(() => audioEngine.play());
+      audioEngine.loadTrack(audioUrl, { id, titre, artiste, previewStart, previewEnd, isPaid }).then(() => audioEngine.play());
     } else {
       audioEngine.toggle();
     }
+  };
+
+  const handleReplay = () => {
+    setShowPaywall(false);
+    paywallShownRef.current = false;
+    const ratio = previewStart != null && duration > 0 ? previewStart / duration : 0;
+    audioEngine.seek(ratio);
+    audioEngine.play();
   };
 
   const seek = (ratio: number) => {
@@ -167,7 +204,32 @@ function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, wave
   };
 
   return (
-    <div className="bg-[#1c1c1c] overflow-hidden flex sm:grid sm:grid-cols-5">
+    <div className="relative bg-[#1c1c1c] overflow-hidden flex sm:grid sm:grid-cols-5">
+
+      {/* Paywall overlay */}
+      {showPaywall && isPaid && (
+        <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center gap-3 z-10 px-4">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="#00bcd4">
+            <path d="M12 1C8.676 1 6 3.676 6 7v1H4v15h16V8h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v1H8V7c0-2.276 1.724-4 4-4zm0 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
+          </svg>
+          <p className="text-white text-[13px] font-semibold text-center">Prévisualisation terminée</p>
+          <p className="text-gray-400 text-[12px] text-center">Achetez pour accéder à la version complète</p>
+          <div className="flex gap-2 mt-1">
+            <a
+              href={`/paiement?type=audio&id=${id}`}
+              className="bg-[#00c853] hover:bg-[#00b548] text-white text-[12px] font-bold px-4 py-2 transition-colors"
+            >
+              Acheter
+            </a>
+            <button
+              onClick={handleReplay}
+              className="bg-white/10 hover:bg-white/20 text-white text-[12px] font-bold px-4 py-2 transition-colors"
+            >
+              Réécouter
+            </button>
+          </div>
+        </div>
+      )}
       {/* Thumbnail */}
       <div className="w-24 sm:w-auto shrink-0 bg-[#111] flex items-center justify-center aspect-square overflow-hidden">
         {coverUrl
@@ -295,6 +357,8 @@ export default function ListeAudio() {
               waveformData={audio.waveform ? (JSON.parse(audio.waveform) as number[]) : null}
               previewStart={audio.preview_start}
               previewEnd={audio.preview_end}
+              price={audio.price}
+              free={audio.free}
             />
           ))}
         </div>

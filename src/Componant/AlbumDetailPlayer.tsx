@@ -20,7 +20,12 @@ const DownloadIcon = () => (
   </svg>
 );
 
-function Waveform({ audioUrl, progress, onSeek }: { audioUrl: string; progress: number; onSeek: (r: number) => void }) {
+function Waveform({
+  audioUrl, progress, onSeek, previewStart, previewEnd, totalDuration,
+}: {
+  audioUrl: string; progress: number; onSeek: (r: number) => void;
+  previewStart?: number | null; previewEnd?: number | null; totalDuration?: number;
+}) {
   const { bars, loading } = useAudioWaveform(audioUrl, BAR_COUNT);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -39,13 +44,27 @@ function Waveform({ audioUrl, progress, onSeek }: { audioUrl: string; progress: 
     const count = bars.length;
     const playedCount = Math.floor(progress * count);
     const barW = w / count;
-    const gap = 0;
+
+    const dur = totalDuration ?? 0;
+    const previewStartBar = dur > 0 && previewStart != null ? Math.floor((previewStart / dur) * count) : 0;
+    const previewEndBar = dur > 0 && previewEnd != null ? Math.floor((previewEnd / dur) * count) : count;
+    const hasPreview = dur > 0 && (previewStart != null || previewEnd != null);
+
     for (let i = 0; i < count; i++) {
       const barH = Math.max(2, (bars[i] / 100) * h);
-      const x = i * (barW + gap);
+      const x = i * barW;
       const y = (h - barH) / 2;
-      ctx.fillStyle = i < playedCount ? "#00bcd4" : "#4b5563";
-      ctx.globalAlpha = i < playedCount ? 1 : 0.65;
+      const inPreview = !hasPreview || (i >= previewStartBar && i < previewEndBar);
+      const played = i < playedCount;
+
+      if (played && inPreview) {
+        ctx.fillStyle = "#00bcd4"; ctx.globalAlpha = 1;
+      } else if (inPreview) {
+        ctx.fillStyle = "#a0aec0"; ctx.globalAlpha = 0.55;
+      } else {
+        ctx.fillStyle = "#6b7280"; ctx.globalAlpha = 0.3;
+      }
+
       ctx.beginPath();
       const r = Math.min(barW / 2, 2);
       if (ctx.roundRect) ctx.roundRect(x, y, barW, barH, r);
@@ -53,7 +72,7 @@ function Waveform({ audioUrl, progress, onSeek }: { audioUrl: string; progress: 
       ctx.fill();
     }
     ctx.globalAlpha = 1;
-  }, [bars, progress]);
+  }, [bars, progress, previewStart, previewEnd, totalDuration]);
 
   useEffect(() => {
     draw();
@@ -92,14 +111,14 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [mobileTab, setMobileTab] = useState<"player" | "tracklist">("player");
+  const [showPaywall, setShowPaywall] = useState(false);
+  const paywallShownRef = useRef(false);
   const isFirstMount = useRef(true);
   const engine = useAudioEngine();
 
   useEffect(() => {
     api.album(id)
-      .then((alb) => {
-        setAlbum(alb);
-      })
+      .then((alb) => setAlbum(alb))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [id]);
@@ -108,26 +127,31 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
   const audioUrl = activeTrack?.audio_file ? (mediaUrl(activeTrack.audio_file) ?? "") : "";
   const coverUrl = activeTrack?.cover
     ? mediaUrl(activeTrack.cover)
-    : album?.cover
-      ? mediaUrl(album.cover)
-      : null;
+    : album?.cover ? mediaUrl(album.cover) : null;
 
-  // Load first track on mount
+  const trackIsPaid = (activeTrack?.price ?? 0) > 0 && (activeTrack?.free ?? 0) !== 1;
+  const previewStart = activeTrack?.preview_start ?? null;
+  const previewEnd = activeTrack?.preview_end ?? null;
+
+  const trackMeta = activeTrack ? {
+    id: String(activeTrack.audio_id),
+    titre: activeTrack.title,
+    artiste: activeTrack.artist ?? "",
+    previewStart,
+    previewEnd,
+    isPaid: trackIsPaid,
+  } : null;
+
+  // Load track when active index changes
   useEffect(() => {
-    if (!activeTrack || !audioUrl) return;
+    if (!activeTrack || !audioUrl || !trackMeta) return;
+    setShowPaywall(false);
+    paywallShownRef.current = false;
     if (isFirstMount.current) {
       isFirstMount.current = false;
-      audioEngine.loadTrack(audioUrl, {
-        id: String(activeTrack.audio_id),
-        titre: activeTrack.title,
-        artiste: activeTrack.artist ?? "",
-      });
+      audioEngine.loadTrack(audioUrl, trackMeta);
     } else {
-      audioEngine.loadTrack(audioUrl, {
-        id: String(activeTrack.audio_id),
-        titre: activeTrack.title,
-        artiste: activeTrack.artist ?? "",
-      }).then(() => audioEngine.play());
+      audioEngine.loadTrack(audioUrl, trackMeta).then(() => audioEngine.play());
     }
   }, [activeIndex, activeTrack?.audio_id]);
 
@@ -137,37 +161,66 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
   const currentTime = isThisTrack ? engine.currentTime : 0;
   const duration = isThisTrack ? engine.duration : 0;
 
+  // Preview-relative time and progress
+  const ps = previewStart ?? 0;
+  const pe = previewEnd ?? duration;
+  const previewDuration = pe - ps;
+  const previewCurrentTime = Math.max(0, currentTime - ps);
+  const hasPreview = previewStart != null || previewEnd != null;
+  const displayProgress = hasPreview && previewDuration > 0 && isThisTrack
+    ? Math.min(1, previewCurrentTime / previewDuration)
+    : progress;
+  const displayTime = formatTime(hasPreview && isThisTrack ? previewCurrentTime : currentTime);
+  const displayDuration = formatTime(hasPreview && previewDuration > 0 ? previewDuration : duration);
+
+  // Show paywall after first preview loop
+  useEffect(() => {
+    if (!trackIsPaid || !isThisTrack) {
+      paywallShownRef.current = false;
+      return;
+    }
+    if (engine.previewDidComplete && !paywallShownRef.current) {
+      paywallShownRef.current = true;
+      setShowPaywall(true);
+    }
+  }, [engine.previewDidComplete, trackIsPaid, isThisTrack]);
+
+  useEffect(() => {
+    if (!isThisTrack) { setShowPaywall(false); paywallShownRef.current = false; }
+  }, [isThisTrack]);
+
   const handleToggle = () => {
-    if (!audioUrl) return;
+    if (!audioUrl || !trackMeta) return;
+    if (trackIsPaid && previewStart == null && previewEnd == null) {
+      window.location.href = `/paiement?type=audio&id=${activeTrack!.audio_id}`;
+      return;
+    }
+    setShowPaywall(false);
+    paywallShownRef.current = false;
     if (!isThisTrack) {
-      audioEngine.loadTrack(audioUrl, {
-        id: String(activeTrack!.audio_id),
-        titre: activeTrack!.title,
-        artiste: activeTrack!.artist ?? "",
-      }).then(() => audioEngine.play());
+      audioEngine.loadTrack(audioUrl, trackMeta).then(() => audioEngine.play());
     } else {
       audioEngine.toggle();
     }
+  };
+
+  const handleReplay = () => {
+    setShowPaywall(false);
+    paywallShownRef.current = false;
+    const ratio = previewStart != null && duration > 0 ? previewStart / duration : 0;
+    audioEngine.seek(ratio);
+    audioEngine.play();
   };
 
   const handleTrackSelect = (index: number) => {
-    if (index === activeIndex) {
-      audioEngine.toggle();
-    } else {
-      setActiveIndex(index);
-    }
+    if (index === activeIndex) { audioEngine.toggle(); }
+    else { setActiveIndex(index); }
   };
 
-  const seek = (ratio: number) => {
-    if (isThisTrack) audioEngine.seek(ratio);
-  };
+  const seek = (ratio: number) => { if (isThisTrack) audioEngine.seek(ratio); };
 
   if (loading || !album) {
-    return (
-      <div className="flex flex-col gap-4">
-        <div className="h-[400px] bg-[#1c1c1c] animate-pulse" />
-      </div>
-    );
+    return <div className="flex flex-col gap-4"><div className="h-100 bg-[#1c1c1c] animate-pulse" /></div>;
   }
 
   const tabBtn = (tab: "player" | "tracklist", label: string) => (
@@ -178,9 +231,7 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
         color: mobileTab === tab ? "#00bcd4" : "#6b7280",
         borderBottom: mobileTab === tab ? "2px solid #00bcd4" : "2px solid transparent",
       }}
-    >
-      {label}
-    </button>
+    >{label}</button>
   );
 
   return (
@@ -195,7 +246,34 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
       <div className="flex flex-col lg:flex-row gap-0 w-full lg:min-h-[600px]">
 
         {/* Panneau gauche — Player */}
-        <div className={`lg:w-[55%] bg-[#1c1c1c] flex-col p-6 sm:p-8 gap-5 ${mobileTab === "tracklist" ? "hidden lg:flex" : "flex"}`}>
+        <div className={`relative lg:w-[55%] bg-[#1c1c1c] flex-col p-6 sm:p-8 gap-5 ${mobileTab === "tracklist" ? "hidden lg:flex" : "flex"}`}>
+
+          {/* Paywall overlay */}
+          {showPaywall && trackIsPaid && (
+            <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center gap-4 z-10 px-6">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="#00bcd4">
+                <path d="M12 1C8.676 1 6 3.676 6 7v1H4v15h16V8h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v1H8V7c0-2.276 1.724-4 4-4zm0 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
+              </svg>
+              <div className="text-center">
+                <p className="text-white text-[16px] font-bold">Prévisualisation terminée</p>
+                <p className="text-gray-400 text-[13px] mt-1">Achetez l'album pour accéder à toutes les pistes</p>
+              </div>
+              <div className="flex gap-3 mt-2">
+                <a
+                  href={`/paiement?type=album&id=${album.id}`}
+                  className="bg-[#00c853] hover:bg-[#00b548] text-white text-[13px] font-bold px-6 py-2.5 transition-colors"
+                >
+                  Acheter l'album
+                </a>
+                <button
+                  onClick={handleReplay}
+                  className="bg-white/10 hover:bg-white/20 text-white text-[13px] font-medium px-5 py-2.5 transition-colors"
+                >
+                  Réécouter
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Album cover + info */}
           <div className="flex items-start gap-4">
@@ -224,7 +302,16 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
           )}
 
           {/* Waveform */}
-          {audioUrl && <Waveform audioUrl={audioUrl} progress={progress} onSeek={seek} />}
+          {audioUrl && (
+            <Waveform
+              audioUrl={audioUrl}
+              progress={progress}
+              onSeek={seek}
+              previewStart={previewStart}
+              previewEnd={previewEnd}
+              totalDuration={duration || undefined}
+            />
+          )}
 
           {/* Progress bar + temps */}
           <div className="flex flex-col gap-1.5">
@@ -235,33 +322,26 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
                 seek((e.clientX - rect.left) / rect.width);
               }}
             >
-              <div
-                className="h-full bg-[#00bcd4] rounded-full transition-all"
-                style={{ width: `${progress * 100}%` }}
-              />
+              <div className="h-full bg-[#00bcd4] rounded-full transition-all" style={{ width: `${displayProgress * 100}%` }} />
             </div>
             <div className="flex justify-between text-gray-500 text-[11px]">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
+              <span>{displayTime}</span>
+              <span>{displayDuration}</span>
             </div>
           </div>
 
           {/* Contrôles */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Prev */}
               <button
                 onClick={() => handleTrackSelect(Math.max(0, activeIndex - 1))}
                 disabled={activeIndex === 0}
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white disabled:opacity-30"
                 aria-label="Piste précédente"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
-                </svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" /></svg>
               </button>
 
-              {/* Play/Pause */}
               <button
                 onClick={handleToggle}
                 className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#00bcd4] hover:bg-[#00acc1] transition-colors flex items-center justify-center text-white"
@@ -273,30 +353,24 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
                 }
               </button>
 
-              {/* Next */}
               <button
                 onClick={() => handleTrackSelect(Math.min(album.tracks.length - 1, activeIndex + 1))}
                 disabled={activeIndex === album.tracks.length - 1}
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white disabled:opacity-30"
                 aria-label="Piste suivante"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 18l8.5-6L6 6v12zm2.5-6 6-4.5v9L8.5 12zM16 6h2v12h-2z" />
-                </svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2.5-6 6-4.5v9L8.5 12zM16 6h2v12h-2z" /></svg>
               </button>
             </div>
 
-            {album && (
-              <a
-                href={`/paiement?type=album&id=${album.id}`}
-                className="flex items-center gap-2 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[12px] sm:text-[13px] font-bold px-4 sm:px-5 py-2.5"
-              >
-                Acheter l'album <DownloadIcon />
-              </a>
-            )}
+            <a
+              href={`/paiement?type=album&id=${album.id}`}
+              className="flex items-center gap-2 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[12px] sm:text-[13px] font-bold px-4 sm:px-5 py-2.5"
+            >
+              Acheter l'album <DownloadIcon />
+            </a>
           </div>
 
-          {/* Description album */}
           {album.description && (
             <p className="text-gray-500 text-[13px] leading-relaxed border-t border-white/10 pt-4">
               {album.description}
@@ -305,10 +379,8 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
         </div>
 
         {/* Panneau droit — Tracklist */}
-        <div className={`lg:w-[45%] bg-[#161616] border-t lg:border-t-0 lg:border-l border-white/10 flex-col px-4 sm:px-6 py-4 overflow-y-auto max-h-[60vh] lg:max-h-[600px] ${mobileTab === "player" ? "hidden lg:flex" : "flex"}`}>
-          <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-3 shrink-0">
-            Pistes de l'album
-          </p>
+        <div className={`lg:w-[45%] bg-[#161616] border-t lg:border-t-0 lg:border-l border-white/10 flex-col px-4 sm:px-6 py-4 overflow-y-auto max-h-[60vh] lg:max-h-150 ${mobileTab === "player" ? "hidden lg:flex" : "flex"}`}>
+          <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-3 shrink-0">Pistes de l'album</p>
           <div className="flex flex-col gap-0.5">
             {album.tracks.map((track, i) => {
               const isActive = i === activeIndex;
@@ -325,7 +397,6 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
                   onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
                   onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
                 >
-                  {/* Track cover */}
                   <div className="w-9 h-9 bg-[#111] shrink-0 overflow-hidden flex items-center justify-center">
                     {track.cover
                       ? <img src={mediaUrl(track.cover)!} alt={track.title} className="w-full h-full object-cover" />
@@ -333,7 +404,6 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
                     }
                   </div>
 
-                  {/* Number / play indicator */}
                   <span className="w-4 text-center text-[12px] shrink-0">
                     {isActive && trackPlaying
                       ? <FluentPause32Filled className="h-3 w-3 text-[#00bcd4] inline" />
@@ -343,25 +413,17 @@ export default function AlbumDetailPlayer({ id }: { id: string }) {
                     }
                   </span>
 
-                  {/* Title + artist */}
                   <div className="flex-1 min-w-0">
-                    <p
-                      className="text-[13px] font-medium truncate transition-colors"
-                      style={{ color: isActive ? "#00bcd4" : "#d1d5db" }}
-                    >
+                    <p className="text-[13px] font-medium truncate transition-colors" style={{ color: isActive ? "#00bcd4" : "#d1d5db" }}>
                       {track.title}
                     </p>
-                    {track.artist && (
-                      <p className="text-[11px] text-gray-500 truncate">{track.artist}</p>
-                    )}
+                    {track.artist && <p className="text-[11px] text-gray-500 truncate">{track.artist}</p>}
                   </div>
 
-                  {/* Duration */}
                   {track.duration != null && (
                     <span className="text-[11px] text-gray-600 shrink-0">{formatTime(track.duration)}</span>
                   )}
 
-                  {/* Lyrics link */}
                   <a
                     href={`/audioitem/${track.audio_id}`}
                     onClick={(e) => e.stopPropagation()}
