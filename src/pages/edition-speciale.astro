@@ -1,0 +1,23 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../Componant/Header";
+import EditionSpecialePage from "../Componant/EditionSpecialePage";
+import Footer from "../Componant/Footer";
+import Container from "../Componant/Container";
+---
+
+<Layout
+  title="Éditions Spéciales"
+  description="Découvrez nos magazines en édition spéciale sur Mangwa Corpus."
+>
+  <Header client:load />
+
+  <Container>
+    <h1 class="text-[22px] sm:text-[36px] font-bold text-gray-900 mt-6 mb-4">
+      Éditions Spéciales
+    </h1>
+  </Container>
+
+  <EditionSpecialePage client:load />
+  <Footer client:load />
+</Layout>

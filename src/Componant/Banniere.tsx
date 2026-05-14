@@ -32,7 +32,7 @@ export default function Banniere({ page }: BanniereProps) {
   const hasPicture = desktop || tablet || mobile;
 
   return (
-    <section className="relative w-full h-[280px] sm:h-[360px] md:h-[455px] overflow-hidden bg-gray-300 mb-6 lg:mb-8">
+    <section className="relative w-full h-[720px] sm:h-[360px] md:h-[455px] overflow-hidden bg-gray-300 mb-6 lg:mb-8">
       {hasPicture && (
         <picture className="absolute inset-0 w-full h-full">
           {desktop && <source media="(min-width: 1024px)" srcSet={desktop} />}

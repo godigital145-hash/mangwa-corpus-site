@@ -9,6 +9,7 @@ export default function AdminMagazines({ token }: { token: string }) {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<{ open: boolean; item?: Magazine }>({ open: false });
   const [saving, setSaving] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const reload = () =>
@@ -19,13 +20,14 @@ export default function AdminMagazines({ token }: { token: string }) {
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
+    setUploadPct(0);
     setError(null);
     const form = new FormData(e.currentTarget);
     const a = adminApi(token);
     try {
       const res = modal.item
-        ? await a.magazines.update(modal.item.id, form)
-        : await a.magazines.create(form);
+        ? await a.magazinesUpload.update(modal.item.id, form, setUploadPct)
+        : await a.magazinesUpload.create(form, setUploadPct);
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as any;
         setError(body?.error ?? `Erreur serveur ${res.status}`);
@@ -37,6 +39,7 @@ export default function AdminMagazines({ token }: { token: string }) {
       setError("Erreur réseau — vérifiez que le serveur est accessible");
     } finally {
       setSaving(false);
+      setUploadPct(0);
     }
   }
 
@@ -157,6 +160,18 @@ export default function AdminMagazines({ token }: { token: string }) {
               <MediaField label="Aperçu PDF" name="pdf_preview" token={token} currentKey={modal.item?.pdf_preview} defaultFolder="magazines/previews" />
 
               {error && <p className="text-red-600 text-sm">{error}</p>}
+
+              {saving && uploadPct > 0 && uploadPct < 100 && (
+                <div>
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Upload en cours…</span>
+                    <span>{uploadPct}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#00bcd4] rounded-full transition-all duration-150" style={{ width: `${uploadPct}%` }} />
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setModal({ open: false })} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">

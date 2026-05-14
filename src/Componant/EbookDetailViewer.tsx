@@ -236,7 +236,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
           {/* Méta */}
           <ul className="flex flex-col gap-1.5 text-[14px] text-gray-600">
             {mag.category && <li><span className="font-semibold">Catégorie :</span> {mag.category}</li>}
-            {mag.issue_number && <li><span className="font-semibold">Numéro :</span> #{mag.issue_number}</li>}
+            {mag.issue_number && <li><span className="font-semibold">Numéro :</span> #{String(mag.issue_number).padStart(3, '0')}</li>}
             {mag.published_at && <li><span className="font-semibold">Date :</span> {new Date(mag.published_at).toLocaleDateString("fr-FR")}</li>}
             {mag.price != null && <li><span className="font-semibold">Prix :</span> {mag.price.toLocaleString("fr-FR")} XAF</li>}
           </ul>

@@ -66,7 +66,7 @@ export default function ListeEditions() {
                   </p>
                   <ul className="flex flex-col gap-2.5 text-[16px] text-gray-700">
                     {mag.category && <li><span className="font-bold">Catégorie :</span> {mag.category}</li>}
-                    {mag.issue_number && <li><span className="font-bold">Numéro :</span> #{mag.issue_number}</li>}
+                    {mag.issue_number && <li><span className="font-bold">Numéro :</span> #{String(mag.issue_number).padStart(3, '0')}</li>}
                     {mag.pages && <li><span className="font-bold">Pages :</span> {mag.pages}</li>}
                     {mag.published_at && <li><span className="font-bold">Date :</span> {new Date(mag.published_at).toLocaleDateString('fr-FR')}</li>}
                   </ul>

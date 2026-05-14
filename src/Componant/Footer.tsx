@@ -82,14 +82,16 @@ export default function Footer() {
             {/* Réseaux sociaux */}
             <div className="flex items-center gap-3 mt-1">
               {[
-                { icon: <FacebookIcon />, label: "Facebook" },
-                { icon: <InstagramIcon />, label: "Instagram" },
-                { icon: <YoutubeIcon />, label: "YouTube" },
-                { icon: <TwitterIcon />, label: "Twitter / X" },
-              ].map(({ icon, label }) => (
+                { icon: <FacebookIcon />, label: "Facebook", url: "https://www.facebook.com/share/1CUZkbw6ri/" },
+                { icon: <InstagramIcon />, label: "Instagram", url: "https://www.instagram.com/tchindadaguekoraymond?igsh=eGl2aTkzdGIweXM4" },
+                { icon: <YoutubeIcon />, label: "YouTube", url: "https://youtube.com/@moviesmusics1679?si=rlq7h3f-Q7FImD6o" },
+                { icon: <TwitterIcon />, label: "Twitter / X", url: "https://twitter.com" },
+              ].map(({ icon, label, url }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#00bcd4] flex items-center justify-center transition-colors"
                 >

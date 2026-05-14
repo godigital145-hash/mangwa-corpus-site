@@ -23,6 +23,7 @@ export default function AdminMedia({ token }: { token: string }) {
   const [items, setItems] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [filterFolder, setFilterFolder] = useState<string>("all");
 
@@ -34,10 +35,11 @@ export default function AdminMedia({ token }: { token: string }) {
   async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setUploading(true);
+    setUploadPct(0);
     setError(null);
     const form = new FormData(e.currentTarget);
     try {
-      const res = await adminApi(token).media.upload(form);
+      const res = await adminApi(token).mediaUpload.upload(form, setUploadPct);
       if (!res.ok) {
         const data = await res.json() as { error?: string };
         throw new Error(data.error ?? "Erreur upload");
@@ -48,6 +50,7 @@ export default function AdminMedia({ token }: { token: string }) {
       setError(err.message ?? "Erreur upload");
     } finally {
       setUploading(false);
+      setUploadPct(0);
     }
   }
 
@@ -96,6 +99,17 @@ export default function AdminMedia({ token }: { token: string }) {
             {uploading ? "Upload…" : "Uploader"}
           </button>
         </form>
+        {uploading && uploadPct > 0 && uploadPct < 100 && (
+          <div className="mt-3">
+            <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <span>Upload en cours…</span>
+              <span>{uploadPct}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-[#00bcd4] rounded-full transition-all duration-150" style={{ width: `${uploadPct}%` }} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filtres */}

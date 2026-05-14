@@ -158,7 +158,7 @@ export default function Header() {
       <div className="hidden lg:flex lg:h-20.5 items-center">
         <Container className="flex items-center h-12 gap-0">
           <a
-            href="#"
+            href="/edition-speciale"
             className="bg-[#00bcd4] text-white font-bold px-5 h-full flex items-center uppercase tracking-wide hover:bg-[#00acc1] transition-colors shrink-0"
           >
             ÉDITION SPÉCIAL
@@ -183,7 +183,7 @@ export default function Header() {
         <div className="lg:hidden bg-white border-t border-gray-200 shadow-md">
           {/* Édition Spécial */}
           <a
-            href="#"
+            href="/edition-speciale"
             className="block bg-[#00bcd4] text-white text-[13px] font-bold px-6 py-4 uppercase tracking-wide"
             onClick={() => setMenuOpen(false)}
           >

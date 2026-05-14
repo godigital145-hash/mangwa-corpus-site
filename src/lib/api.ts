@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.PUBLIC_API_URL ?? 'https://serveur.mangwacorpus.com'
+const API_URL = 'https://serveur.mangwacorpus.com'
 
 export function mediaUrl(key: string | null | undefined): string | null {
   if (!key) return null
@@ -286,5 +286,41 @@ export function adminApi(token: string) {
       delete: (id: number) =>
         fetch(`${API_URL}/admin/payments/${id}`, { method: 'DELETE', headers: auth }),
     },
+    audiosUpload: {
+      create: (form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/audios`, 'POST', form, onProgress),
+      update: (id: number, form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/audios/${id}`, 'PUT', form, onProgress),
+    },
+    magazinesUpload: {
+      create: (form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/magazines`, 'POST', form, onProgress),
+      update: (id: number, form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/magazines/${id}`, 'PUT', form, onProgress),
+    },
+    mediaUpload: {
+      upload: (form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/media`, 'POST', form, onProgress),
+    },
+    albumsUpload: {
+      create: (form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/albums`, 'POST', form, onProgress),
+      update: (id: number, form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/albums/${id}`, 'PUT', form, onProgress),
+    },
+  }
+
+  function xhrUpload(url: string, method: 'POST' | 'PUT', form: FormData, onProgress: (pct: number) => void): Promise<Response> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, url);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => resolve(new Response(xhr.responseText, { status: xhr.status }));
+      xhr.onerror = () => reject(new Error('Erreur réseau'));
+      xhr.send(form);
+    });
   }
 }

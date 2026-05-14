@@ -31,7 +31,7 @@ export default function SectionAudio() {
         {/* Grille audios — 2 col mobile, 3 col tablette, 5 col desktop */}
         {/* CSS masque les éléments >4 sur mobile et >5 sur desktop — sans JS */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 [&>*:nth-child(n+5)]:hidden [&>*:nth-child(n+5)]:lg:block">
-          {audios.map((audio) => (
+          {audios.slice(0, 5).map((audio) => (
             <a key={audio.id} href={`/audioitem/${audio.id}`} className="flex flex-col gap-2 cursor-pointer group">
               <div className="relative w-full aspect-square bg-[#1c1c1c] flex items-center justify-center overflow-hidden">
                 {mediaUrl(audio.cover)

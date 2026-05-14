@@ -12,6 +12,7 @@ function AlbumsSection({ token }: { token: string }) {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<{ open: boolean; item?: Album; tab: AlbumTab }>({ open: false, tab: "info" });
   const [saving, setSaving] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [allAudios, setAllAudios] = useState<Audio[]>([]);
 
@@ -28,14 +29,15 @@ function AlbumsSection({ token }: { token: string }) {
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
+    setUploadPct(0);
     setError(null);
     const form = new FormData(e.currentTarget);
     const a = adminApi(token);
     try {
       if (modal.item) {
-        await a.albums.update(modal.item.id, form);
+        await a.albumsUpload.update(modal.item.id, form, setUploadPct);
       } else {
-        await a.albums.create(form);
+        await a.albumsUpload.create(form, setUploadPct);
       }
       await reload();
       setModal({ open: false, tab: "info" });
@@ -43,6 +45,7 @@ function AlbumsSection({ token }: { token: string }) {
       setError("Erreur lors de la sauvegarde");
     } finally {
       setSaving(false);
+      setUploadPct(0);
     }
   }
 
@@ -199,6 +202,17 @@ function AlbumsSection({ token }: { token: string }) {
               )}
 
               {error && <p className="text-red-600 text-sm">{error}</p>}
+              {saving && uploadPct > 0 && uploadPct < 100 && (
+                <div>
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Upload en cours…</span>
+                    <span>{uploadPct}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#00bcd4] rounded-full transition-all duration-150" style={{ width: `${uploadPct}%` }} />
+                  </div>
+                </div>
+              )}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setModal({ open: false, tab: "info" })} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors duration-150">Annuler</button>
                 <button type="submit" disabled={saving} className="bg-[#00bcd4] hover:bg-[#00acc1] text-white font-bold px-6 py-2 rounded text-sm disabled:opacity-60 transition-colors duration-150">
@@ -222,6 +236,7 @@ export default function AdminAudios({ token }: { token: string }) {
   const [modal, setModal] = useState<{ open: boolean; item?: Audio }>({ open: false });
   const [selectedAlbumId, setSelectedAlbumId] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
   const [waveformStatus, setWaveformStatus] = useState<"idle" | "computing">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -236,6 +251,7 @@ export default function AdminAudios({ token }: { token: string }) {
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
+    setUploadPct(0);
     setError(null);
     const form = new FormData(e.currentTarget);
 
@@ -261,9 +277,9 @@ export default function AdminAudios({ token }: { token: string }) {
     const a = adminApi(token);
     try {
       if (modal.item) {
-        await a.audios.update(modal.item.id, form);
+        await a.audiosUpload.update(modal.item.id, form, setUploadPct);
       } else {
-        await a.audios.create(form);
+        await a.audiosUpload.create(form, setUploadPct);
       }
       await reload();
       setModal({ open: false });
@@ -271,6 +287,7 @@ export default function AdminAudios({ token }: { token: string }) {
       setError("Erreur lors de la sauvegarde");
     } finally {
       setSaving(false);
+      setUploadPct(0);
     }
   }
 
@@ -445,6 +462,17 @@ export default function AdminAudios({ token }: { token: string }) {
               {error && <p className="text-red-600 text-sm">{error}</p>}
               {waveformStatus === "computing" && (
                 <p className="text-xs text-gray-400">Calcul de la waveform…</p>
+              )}
+              {saving && uploadPct > 0 && uploadPct < 100 && (
+                <div>
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Upload en cours…</span>
+                    <span>{uploadPct}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#00bcd4] rounded-full transition-all duration-150" style={{ width: `${uploadPct}%` }} />
+                  </div>
+                </div>
               )}
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setModal({ open: false })} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors duration-150">Annuler</button>

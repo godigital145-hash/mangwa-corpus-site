@@ -8,20 +8,19 @@ import SectionEdition from "../Componant/SectionEdition";
 import SectionAudio from "../Componant/SectionAudio";
 import SectionLibrairie from "../Componant/SectionLibrairie";
 import Footer from "../Componant/Footer";
+import Container from "../Componant/Container";
+import Banniere from "../Componant/Banniere";
 ---
 
 <Layout
-  description="Mangwa Corpus – votre médiathèque africaine : musiques, magazines, e-books et bien plus. Explorez une culture riche en un seul endroit."
->
+	description='Mangwa Corpus – votre médiathèque africaine : musiques, magazines, e-books et bien plus. Explorez une culture riche en un seul endroit.'>
 	<Header client:load />
 	<!-- <SectionCategories client:load /> -->
-	<PanneauEdition
-		client:load
-		nom="Samuel ETO'O"
-		description='Un homme, une histoire, une légende vivante'
-		ctaLabel='Obtenir un exemple'
-		ctaHref='#'
-	/>
+	<div class='mt-14'>
+		<Container client:load>
+			<Banniere page='mag' client:load />
+		</Container>
+	</div>
 	<SectionLibrairie client:load />
 	<!-- <SectionEdition client:load /> -->
 	<SectionAudio client:load />
