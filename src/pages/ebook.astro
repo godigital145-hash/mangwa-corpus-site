@@ -6,12 +6,12 @@ import ListeEditions from "../Componant/ListeEditions";
 import SectionLibrairie from "../Componant/SectionLibrairie";
 import Footer from "../Componant/Footer";
 import Container from "../Componant/Container";
+import Banniere from "../Componant/Banniere";
 ---
 
 <Layout
-  title="E-Books & Magazines"
-  description="Parcourez notre collection d'e-books et magazines africains. Lectures enrichissantes sur la culture, l'histoire et l'actualité africaine."
->
+  title='E-Books & Magazines'
+  description="Parcourez notre collection d'e-books et magazines africains. Lectures enrichissantes sur la culture, l'histoire et l'actualité africaine.">
   <Header client:load />
 
   <Container>
@@ -19,15 +19,9 @@ import Container from "../Componant/Container";
       E-Book
     </h1>
   </Container>
-
-  <PanneauEdition
-    client:load
-    badge='Édition Limitée'
-    nom="Samuel ETO'O"
-    description='Un homme, une histoire, une légende vivante'
-    ctaLabel='Obtenir un exemple'
-    ctaHref='#'
-  />
+  <Container client:load>
+    <Banniere page='mag' client:load />
+  </Container>
 
   <ListeEditions client:load />
   <SectionLibrairie client:load />
