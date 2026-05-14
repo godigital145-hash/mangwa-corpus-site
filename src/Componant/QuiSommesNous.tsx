@@ -1,5 +1,5 @@
 import Container from "./Container";
-import Raymond from "../assets/raymond.jpeg";
+
 
 const images = {
   hero: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1600&q=80",
@@ -16,7 +16,7 @@ function Main({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default function QuiSommesNous() {
+export default function QuiSommesNous({ images }: { images: typeof images }) {
   return (
     <main className="w-ful flex flex-col gap-16">
       <div className="bg-gray-100 py-6 lg:py-24">
@@ -24,7 +24,7 @@ export default function QuiSommesNous() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
             <div className="w-full aspect-square overflow-hidden">
               <img
-                src={Raymond.src}
+                src={images.src}
                 alt="Notre histoire"
                 className="w-full h-full object-cover"
               />

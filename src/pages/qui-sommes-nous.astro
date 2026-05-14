@@ -3,13 +3,13 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../Componant/Header";
 import Footer from "../Componant/Footer";
 import QuiSommesNousSection from "../Componant/QuiSommesNous";
+import Raymond from "../assets/raymond.jpeg";
 ---
 
 <Layout
-  title="Qui sommes-nous"
-  description="Découvrez l'équipe et la mission de Mangwa Corpus — une plateforme dédiée à la valorisation de la culture africaine à travers le son, l'image et l'écrit."
->
+  title='Qui sommes-nous'
+  description="Découvrez l'équipe et la mission de Mangwa Corpus — une plateforme dédiée à la valorisation de la culture africaine à travers le son, l'image et l'écrit.">
   <Header client:load />
-  <QuiSommesNousSection client:load />
+  <QuiSommesNousSection images={Raymond} client:load />
   <Footer client:load />
 </Layout>
