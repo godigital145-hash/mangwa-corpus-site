@@ -8,6 +8,8 @@ export const GET: APIRoute = async ({ url }) => {
     { path: "/", priority: "1.0", changefreq: "weekly" },
     { path: "/audio", priority: "0.9", changefreq: "daily" },
     { path: "/ebook", priority: "0.9", changefreq: "daily" },
+    { path: "/edition-speciale", priority: "0.8", changefreq: "weekly" },
+    { path: "/videos", priority: "0.8", changefreq: "weekly" },
     { path: "/qui-sommes-nous", priority: "0.5", changefreq: "monthly" },
   ];
 

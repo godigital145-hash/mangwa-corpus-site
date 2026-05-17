@@ -158,6 +158,11 @@ export default function AdminMagazines({ token }: { token: string }) {
               <MediaField label="Couverture (image)" name="cover" token={token} currentKey={modal.item?.cover} defaultFolder="magazines/covers" />
               <MediaField label="PDF complet" name="pdf_file" token={token} currentKey={modal.item?.pdf_file} defaultFolder="magazines/pdf" />
               <MediaField label="Aperçu PDF" name="pdf_preview" token={token} currentKey={modal.item?.pdf_preview} defaultFolder="magazines/previews" />
+              <div className="bg-gray-50 border border-gray-200 rounded p-3 flex flex-col gap-1">
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Fenêtre de prévisualisation PDF</p>
+                <p className="text-xs text-gray-400 mb-1">Page de départ de l'aperçu (laisser vide = page 1)</p>
+                <Field label="Page de début" name="preview_start_page" type="number" defaultValue={modal.item?.preview_start_page?.toString() ?? ""} />
+              </div>
 
               {error && <p className="text-red-600 text-sm">{error}</p>}
 

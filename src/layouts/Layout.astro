@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
 import StickyPlayer from "../Componant/StickyPlayer";
+import logo from "../assets/logo.png";
 
 interface Props {
   title?: string;
@@ -45,8 +46,9 @@ const structuredData = jsonLd ?? defaultJsonLd;
   <head>
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1' />
-    <link rel='icon' type='image/svg+xml' href='/favicon.svg' />
-    <link rel='icon' href='/favicon.ico' />
+    <link rel='icon' type='image/svg+xml' href={logo.src} />
+    <link rel='icon' href={logo.src} />
+    <link rel='apple-touch-icon' href={logo.src} />
     <meta name='generator' content={Astro.generator} />
 
     <!-- Primary -->
@@ -72,7 +74,10 @@ const structuredData = jsonLd ?? defaultJsonLd;
     <meta name='twitter:image' content={ogImage} />
 
     <!-- JSON-LD -->
-    <script type='application/ld+json' set:html={JSON.stringify(structuredData)} />
+    <script
+      type='application/ld+json'
+      set:html={JSON.stringify(structuredData)}
+    />
 
     <ClientRouter />
   </head>

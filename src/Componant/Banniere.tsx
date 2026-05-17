@@ -11,7 +11,6 @@ export default function Banniere({ page }: BanniereProps) {
   useEffect(() => {
     api.hero(page)
       .then((items) => {
-        console.log("Hero items for page", page, items);
         const active = items.filter((h) => h.page === page && h.active).sort((a, b) => a.display_order - b.display_order);
         if (active.length > 0) setHero(active[0]);
       })

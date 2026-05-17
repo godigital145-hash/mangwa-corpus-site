@@ -18,6 +18,7 @@ export type Magazine = {
   price: number | null
   pdf_file: string | null
   pdf_preview: string | null
+  preview_start_page: number | null
   pages: number | null
   created_at: string
   updated_at: string

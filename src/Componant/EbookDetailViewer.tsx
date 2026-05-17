@@ -27,9 +27,9 @@ type PdfComponents = {
   Page: React.ComponentType<any>;
 };
 
-function PdfViewer({ url, paymentUrl }: { url: string; paymentUrl: string }) {
+function PdfViewer({ url, paymentUrl, startPage = 1 }: { url: string; paymentUrl: string; startPage?: number }) {
   const [numPages, setNumPages] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(startPage);
   const [containerWidth, setContainerWidth] = useState(0);
   const [pdfLib, setPdfLib] = useState<PdfComponents | null>(null);
 
@@ -46,8 +46,8 @@ function PdfViewer({ url, paymentUrl }: { url: string; paymentUrl: string }) {
     import("react-pdf/dist/Page/TextLayer.css" as any);
   }, []);
 
-  const previewTotal = Math.min(numPages, MAX_PREVIEW_PAGES);
-  const isLocked = numPages > MAX_PREVIEW_PAGES && currentPage >= MAX_PREVIEW_PAGES;
+  const previewTotal = Math.min(numPages, startPage - 1 + MAX_PREVIEW_PAGES);
+  const isLocked = numPages > previewTotal && currentPage >= previewTotal;
 
   if (!pdfLib) {
     return (
@@ -106,8 +106,8 @@ function PdfViewer({ url, paymentUrl }: { url: string; paymentUrl: string }) {
       {numPages > 0 && (
         <div className="flex items-center justify-between">
           <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(startPage, p - 1))}
+            disabled={currentPage <= startPage}
             className="flex items-center gap-1 px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-[14px]"
           >
             <ChevronLeft /> Précédent
@@ -116,7 +116,7 @@ function PdfViewer({ url, paymentUrl }: { url: string; paymentUrl: string }) {
             <p className="text-gray-900 font-semibold text-[14px]">
               Page {currentPage} / {previewTotal}
             </p>
-            {numPages > MAX_PREVIEW_PAGES && (
+            {numPages > previewTotal && (
               <p className="text-gray-400 text-[11px] mt-0.5">
                 Aperçu — {MAX_PREVIEW_PAGES} pages sur {numPages}
               </p>
@@ -277,7 +277,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
           </span>
         </div>
         {pdfPreviewUrl
-          ? <PdfViewer url={pdfPreviewUrl} paymentUrl={paymentUrl} />
+          ? <PdfViewer url={pdfPreviewUrl} paymentUrl={paymentUrl} startPage={mag.preview_start_page ?? 1} />
           : <NoPdfPlaceholder />
         }
       </div>

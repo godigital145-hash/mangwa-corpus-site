@@ -1,0 +1,23 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../Componant/Header";
+import ListeVideos from "../Componant/ListeVideos";
+import Footer from "../Componant/Footer";
+import Container from "../Componant/Container";
+---
+
+<Layout
+  title="Vidéos"
+  description="Découvrez nos vidéos sur Mangwa Corpus."
+>
+  <Header client:load />
+
+  <Container>
+    <h1 class="text-[22px] sm:text-[26px] font-bold text-gray-900 mt-6 mb-4">
+      Vidéos
+    </h1>
+  </Container>
+
+  <ListeVideos client:load />
+  <Footer client:load />
+</Layout>
