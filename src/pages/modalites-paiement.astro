@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../Componant/Header";
+import Footer from "../Componant/Footer";
+import ModalitesPaiement from "../Componant/ModalitesPaiement";
+---
+
+<Layout
+  title="Informations de Paiement"
+  description="Découvrez tous les moyens de paiement disponibles chez Mangwa Corpus. Mobile Money, virement bancaire, paiement en ligne et plus. Processus de facturation transparent.">
+  <Header client:load />
+  <ModalitesPaiement client:load />
+  <Footer client:load />
+</Layout>

@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../Componant/Header";
+import Footer from "../Componant/Footer";
+import Partenaires from "../Componant/Partenaires";
+---
+
+<Layout
+  title="Nos Partenaires"
+  description="Découvrez nos partenaires médias, artistiques, institutionnels et techniques. Mangwa Corpus collabore avec des acteurs culturels clés pour la création africaine.">
+  <Header client:load />
+  <Partenaires client:load />
+  <Footer client:load />
+</Layout>

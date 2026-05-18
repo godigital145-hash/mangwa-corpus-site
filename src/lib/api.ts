@@ -167,6 +167,19 @@ export type ActivityEntry = {
   created_at: string
 }
 
+export type BigHeroSlide = {
+  id: string
+  title: string
+  cta_label: string | null
+  cta_url: string | null
+  image_desktop: string | null
+  image_mobile: string | null
+  slide_order: number
+  active: number
+  created_at: string
+  updated_at: string
+}
+
 export const api = {
   magazines: (): Promise<Magazine[]> =>
     fetch(`${API_URL}/api/magazines`).then((r) => r.json()),
@@ -188,6 +201,8 @@ export const api = {
     fetch(`${API_URL}/api/albums/${id}`).then((r) => r.json()),
   audioAlbum: (audioId: string): Promise<(Album & { tracks: Audio[] }) | null> =>
     fetch(`${API_URL}/api/audios/${audioId}/album`).then((r) => r.json()),
+  bigHero: (): Promise<BigHeroSlide[]> =>
+    fetch(`${API_URL}/api/big-hero`).then((r) => r.json()),
 }
 
 export function adminApi(token: string) {
@@ -308,6 +323,18 @@ export function adminApi(token: string) {
         xhrUpload(`${API_URL}/admin/albums`, 'POST', form, onProgress),
       update: (id: number, form: FormData, onProgress: (pct: number) => void) =>
         xhrUpload(`${API_URL}/admin/albums/${id}`, 'PUT', form, onProgress),
+    },
+    bigHero: {
+      list: (): Promise<BigHeroSlide[]> =>
+        fetch(`${API_URL}/admin/big-hero`, { headers: auth }).then((r) => r.json()),
+      delete: (id: string) =>
+        fetch(`${API_URL}/admin/big-hero/${id}`, { method: 'DELETE', headers: auth }),
+    },
+    bigHeroUpload: {
+      create: (form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/big-hero`, 'POST', form, onProgress),
+      update: (id: string, form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/big-hero/${id}`, 'PUT', form, onProgress),
     },
   }
 

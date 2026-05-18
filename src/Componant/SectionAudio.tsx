@@ -46,6 +46,17 @@ export default function SectionAudio() {
             </a>
           ))}
         </div>
+
+        {audios.length > 0 && (
+          <div className="flex justify-center mt-10">
+            <a
+              href="/audio"
+              className="border border-[#00bcd4] text-[#00bcd4] hover:bg-[#00bcd4] hover:text-white transition-colors font-bold text-sm px-8 py-3"
+            >
+              Voir plus
+            </a>
+          </div>
+        )}
       </Container>
     </section>
   );

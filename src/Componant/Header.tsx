@@ -72,7 +72,7 @@ const CloseIcon = () => (
 const navItems = [
   { label: "E-Book", href: "/ebook", hasDropdown: true },
   { label: "Audios", href: "/audio", hasDropdown: true },
-  { label: "Services", href: "#", hasDropdown: true },
+  { label: "Services", href: "/services", hasDropdown: false },
   { label: "Qui sommes nous ?", href: "/qui-sommes-nous", hasDropdown: false },
 ];
 

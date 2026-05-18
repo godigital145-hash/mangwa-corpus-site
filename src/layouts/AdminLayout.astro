@@ -15,6 +15,7 @@ const nav = [
   { href: "/admin/audios", label: "Audios", key: "audios" },
   { href: "/admin/videos", label: "Vidéos", key: "videos" },
   { href: "/admin/hero", label: "Bannières", key: "hero" },
+  { href: "/admin/big-hero", label: "Big Hero", key: "big-hero" },
   { href: "/admin/media", label: "Médias", key: "media" },
   { href: "/admin/users", label: "Utilisateurs", key: "users" },
   { href: "/admin/newsletter", label: "Newsletter", key: "newsletter" },
@@ -35,6 +36,30 @@ const nav = [
     <title>{title} — Mangwa Admin</title>
   </head>
   <body class='bg-gray-100 h-screen flex overflow-hidden'>
+    <div
+      id='page-loader'
+      style='display:flex'
+      class='fixed inset-0 z-9999 bg-white flex-col items-center justify-center'
+    >
+      <p class='text-[#00bcd4] font-bold text-xs uppercase tracking-widest mb-5'>
+        Mangwa Corpus
+      </p>
+      <div
+        class='w-6 h-6 border-2 border-gray-200 border-t-[#00bcd4] rounded-full animate-spin'
+      ></div>
+    </div>
+    <script>
+      const el = document.getElementById("page-loader") as HTMLElement | null;
+      function hide() {
+        if (!el) return;
+        el.style.transition = "opacity 0.35s ease";
+        el.style.opacity = "0";
+        el.style.pointerEvents = "none";
+        setTimeout(() => { if (el) el.style.display = "none"; }, 350);
+      }
+      window.addEventListener("load", () => setTimeout(hide, 100), { once: true });
+      setTimeout(hide, 5000);
+    </script>
     <!-- Sidebar -->
     <aside
       class='w-60 bg-gray-900 text-white flex flex-col shrink-0 h-full overflow-y-auto'>

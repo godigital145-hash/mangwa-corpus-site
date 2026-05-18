@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../Componant/Header";
+import Footer from "../Componant/Footer";
+import Services from "../Componant/Services";
+---
+
+<Layout
+  title='Nos Services'
+  description="Découvrez les services proposés par Mangwa Corpus — production musicale, publication de magazines, distribution d'ebooks et bien plus.">
+  <Header client:load />
+  <Services client:load />
+  <Footer client:load />
+</Layout>

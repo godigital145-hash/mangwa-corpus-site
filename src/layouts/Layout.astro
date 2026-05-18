@@ -82,6 +82,50 @@ const structuredData = jsonLd ?? defaultJsonLd;
     <ClientRouter />
   </head>
   <body>
+    <div
+      id='page-loader'
+      style='display:flex'
+      class='fixed inset-0 z-9999 bg-white flex-col items-center justify-center'
+    >
+      <p class='text-[#00bcd4] font-bold text-xs uppercase tracking-widest mb-5'>
+        Mangwa Corpus
+      </p>
+      <div
+        class='w-6 h-6 border-2 border-gray-200 border-t-[#00bcd4] rounded-full animate-spin'
+      ></div>
+    </div>
+
+    <script>
+      function getLoader() {
+        return document.getElementById("page-loader") as HTMLElement | null;
+      }
+      function hide() {
+        const el = getLoader();
+        if (!el) return;
+        el.style.transition = "opacity 0.35s ease";
+        el.style.opacity = "0";
+        el.style.pointerEvents = "none";
+        setTimeout(() => {
+          const e = getLoader();
+          if (e) e.style.display = "none";
+        }, 350);
+      }
+      function show() {
+        const el = getLoader();
+        if (!el) return;
+        el.style.display = "flex";
+        el.style.opacity = "1";
+        el.style.pointerEvents = "auto";
+        el.style.transition = "";
+      }
+      window.addEventListener("load", () => setTimeout(hide, 100), {
+        once: true,
+      });
+      document.addEventListener("astro:before-preparation", show);
+      document.addEventListener("astro:page-load", () => setTimeout(hide, 150));
+      setTimeout(hide, 5000);
+    </script>
+
     <slot />
     <div transition:persist='sticky-player'>
       <StickyPlayer client:load />

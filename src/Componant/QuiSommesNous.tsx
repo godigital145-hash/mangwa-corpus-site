@@ -1,3 +1,4 @@
+import { useIntersectionObserver } from "../hooks/useIntersectionObserver";
 import Container from "./Container";
 
 
@@ -10,6 +11,36 @@ const images = {
   histoire: "https://images.unsplash.com/photo-1493612276216-ee3925520721?auto=format&fit=crop&w=900&q=80",
 };
 
+function AnimatedSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const { ref, isVisible } = useIntersectionObserver();
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-700 ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function AnimatedCard({ children, index }: { children: React.ReactNode; index: number }) {
+  const { ref, isVisible } = useIntersectionObserver();
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${index * 100}ms` }}
+      className={`transition-all duration-700 ${
+        isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
 function Main({ children }: { children: React.ReactNode }) {
   return (
     <main className="w-full max-w-5xl mx-auto py-10 px-6 sm:px-0 flex flex-col gap-16">{children}</main>
@@ -21,7 +52,8 @@ export default function QuiSommesNous({ images }: { images: typeof images }) {
     <main className="w-ful flex flex-col gap-16">
       <div className="bg-gray-100 py-6 lg:py-24">
         <Main>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+          <AnimatedSection>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
             <div className="w-full aspect-square overflow-hidden">
               <img
                 src={images.src}
@@ -36,89 +68,53 @@ export default function QuiSommesNous({ images }: { images: typeof images }) {
               </h2>
               <div className="karma">
                 <p className="text-[16px] lg:text-xl text-gray-600 leading-relaxed">
-                  Une succursale dont le champ d'action est subdivisé en deux principales catégories :
-                  <ul className="list-disc pl-5">
-                    <li>Activités récréatives et de loisirs R930200 (événementiel).</li>
-                    <li>Services personnels n.c.a - S960004 (productions).</li>
-                    <li>N° : RCCM CM-DLA. -01-2025-A10-01934</li>
-                    <li>NIU : P018217230860M</li>
-                  </ul>
+                  Mangwa Corpus est une entreprise de productions  artistique,  culturel et événementiel basée à Douala au Cameroun. Il a pour Président Directeur Général (CEO)  <b>TCHINDA DAGUEKO Raymond</b>.
+                  <br />
+                  <br />
+                  Mangwa Corpus est déclaré comme une activité professionnelle au Cameroun :
+                  <table>
+                    <tbody>
+                      <tr>
+                        <td className="font-bold">Dénomination :</td>
+                        <td>Mangwa Corpus</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold" style={{ lineHeight: 1 }}>Activité principale </td>
+                        <td><b>R930200 :</b> Activités récréatives et de loisirs / Événementiel</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold" style={{ lineHeight: 1 }}>Activité secondaire </td>
+                        <td><b>S960004 :</b>  Services personnels n.c.a / Productions artistiques</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold" style={{ lineHeight: 1 }}>RCCM</td>
+                        <td>CM-DLA-01-2025-A10-01934</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold" style={{ lineHeight: 1 }}>NIU</td>
+                        <td>P018217230860M</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold" style={{ lineHeight: 1 }}>N° de déclaration</td>
+                        <td>9846216005</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold" style={{ lineHeight: 1 }}>Siège</td>
+                        <td>Douala, Cameroun</td>
+                      </tr>
+                    </tbody>
+                  </table>
 
                 </p>
                 <p className="text-[16px] lg:text-xl text-gray-600 leading-relaxed mt-4">
-                  <span className="font-bold">Adresse :</span> Douala, Cameroun <br />
-                  <span className="font-bold">E-mail:</span> daguekotr@gmail.com | rtdagueko@yahoo.fr <br /><br />
-                  <span className="font-bold">CONTACT :</span> <br />
-                  <span className="font-bold">+237 698 944 443
-                  </span> (Professionnel)<br />
-                  <span className="font-bold">+237 672 666 503
-                  </span> (personnel)<br />
-                  <span className="font-bold">+237 620 114 886
-                  </span> (Privé)<br />
+                  Ça confirme que Mangwa Corpus est une entité enregistrée qui produit des contenus, organise des événements et gère des services artistiques.
                 </p>
               </div>
             </div>
-          </div>
+            </div>
+          </AnimatedSection>
         </Main>
       </div>
-      <Main>
-        {/* ── Titre ── */}
-        <h1 className="inter text-[36px] sm:text-[52px] font-bold text-gray-900 uppercase mb-8 text-center">
-          Qui sommes nous ?
-        </h1>
-
-        {/* ── Hero image ── */}
-        <div className="w-full aspect-16/7 overflow-hidden">
-          <img
-            src={images.hero}
-            alt="Mangwa Corpus"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        {/* ── Citation centrale ── */}
-        <div className="max-w-2xl mx-auto text-center py-14">
-          <p className="text-[24px] sm:text-[40px] text-gray-700 leading-relaxed karma italic">
-            Mangwa Corpus est un espace de création, de mémoire et de partage,
-            dédié à valoriser la richesse culturelle et intellectuelle de l'Afrique.
-          </p>
-        </div>
-        {/* ── Texte gauche / Image droite ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-          <div className="flex flex-col gap-5">
-            <h2 className="text-[24px] sm:text-[30px] font-extrabold text-gray-900 uppercase leading-tight">
-              Notre mission
-            </h2>
-            <div className="karma">
-              <p className="text-[16px] lg:text-xl text-gray-600 leading-relaxed">
-                Notre mission est de documenter, diffuser et célébrer les récits
-                africains qui méritent d'être entendus. À travers nos magazines,
-                nos livres et notre catalogue musical, nous construisons un pont
-                entre les générations, entre les artistes et leur public, entre
-                l'Afrique et le monde.
-              </p>
-              <p className="text-[16px] lg:text-xl text-gray-600 leading-relaxed">
-                Chaque édition, chaque piste audio, chaque page publiée est le
-                fruit d'un travail rigoureux mené par des passionnés convaincus
-                que la culture africaine est une force universelle qui mérite
-                d'être célébrée et transmise aux générations futures.
-              </p>
-              <p className="text-[16px] lg:text-xl text-gray-600 leading-relaxed">
-                Fondé avec la conviction que l'Afrique a ses propres récits à
-                raconter, Mangwa Corpus s'est imposé comme une référence
-                éditoriale et musicale, présente dans plus d'une dizaine de pays
-                à travers le continent et la diaspora.
-              </p>
-            </div>
-          </div>
-          <div className="w-full aspect-square overflow-hidden">
-            <img
-              src={images.mission}
-              alt="Notre équipe"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      </Main>
 
 
       {/* ── Texte gauche / Image droite ── */}
@@ -126,68 +122,6 @@ export default function QuiSommesNous({ images }: { images: typeof images }) {
 
 
       {/* ── Galerie 3 images ── */}
-      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="w-full aspect-square overflow-hidden">
-          <img
-            src={images.gallery1}
-            alt="Édition & Presse"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="w-full aspect-square overflow-hidden">
-          <img
-            src={images.gallery2}
-            alt="Musique & Audio"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="w-full aspect-square overflow-hidden">
-          <img
-            src={images.gallery3}
-            alt="Librairie & Savoir"
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="w-full aspect-square overflow-hidden">
-          <img
-            src={images.gallery3}
-            alt="Librairie & Savoir"
-            className="w-full h-full object-cover"
-          />
-        </div>
-      </div>
-
-      {/* ── Image gauche / Texte droite ── */}
-      <Main>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-          <div className="w-full aspect-square overflow-hidden">
-            <img
-              src={images.histoire}
-              alt="Notre histoire"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          <div className="flex flex-col gap-5">
-            <h2 className="text-[24px] sm:text-[30px] font-extrabold text-gray-900 uppercase leading-tight">
-              Notre histoire
-            </h2>
-            <div className="karma">
-              <p className="text-[16px] lg:text-xl text-gray-600 leading-relaxed">
-                De nos éditions spéciales consacrées aux icônes du continent aux
-                compilations audio de nos artistes, chaque production est pensée
-                avec passion et rigueur pour toucher le plus grand nombre.
-              </p>
-              <p className="text-[16px] lg:text-xl text-gray-600 leading-relaxed">
-                Nous croyons que la mémoire collective se construit jour après
-                jour, à travers les mots que l'on choisit, les images que l'on
-                garde et les sons que l'on transmet aux générations futures.
-                Mangwa Corpus en est le gardien fidèle.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Main>
 
     </main >
   );

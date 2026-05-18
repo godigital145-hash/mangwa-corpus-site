@@ -35,6 +35,12 @@ const links = {
   services: ["Paiement", "Partenariat", "Publicité", "À propos"],
 };
 
+const serviceLinks: Record<string, string> = {
+  "Partenariat": "/partenaires",
+  "Publicité": "/publicite",
+  "Paiement": "/modalites-paiement"
+};
+
 export default function Footer() {
   return (
     <footer className="w-full bg-[#0f0f0f] text-white mt-20">
@@ -157,7 +163,10 @@ export default function Footer() {
             <ul className="flex flex-col gap-2.5">
               {links.services.map((l) => (
                 <li key={l}>
-                  <a href="#" className="text-white/50 text-[13px] hover:text-[#00bcd4] transition-colors">
+                  <a
+                    href={serviceLinks[l] || "#"}
+                    className="text-white/50 text-[13px] hover:text-[#00bcd4] transition-colors"
+                  >
                     {l}
                   </a>
                 </li>

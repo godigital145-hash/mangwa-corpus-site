@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../Componant/Header";
+import Footer from "../Componant/Footer";
+import Publicite from "../Componant/Publicite";
+---
+
+<Layout
+  title="Publicité & Partenariats Média"
+  description="Découvrez les espaces publicitaires disponibles avec Mangwa Corpus. Magazine, site web, réseaux sociaux, vidéos et podcasts. Contactez-nous pour vos campagnes.">
+  <Header client:load />
+  <Publicite client:load />
+  <Footer client:load />
+</Layout>
