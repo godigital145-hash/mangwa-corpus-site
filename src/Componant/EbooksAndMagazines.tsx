@@ -10,7 +10,7 @@ type Props = {
 export default function EbooksAndMagazines({ activeTab: controlledTab, onTabChange }: Props = {}) {
   const [magazines, setMagazines] = useState<Magazine[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'ebook' | 'magazine'>(controlledTab || 'ebook');
+  const [activeTab, setActiveTab] = useState<'ebook' | 'magazine'>(controlledTab || 'magazine');
 
   useEffect(() => {
     api.magazines().then(setMagazines).catch(console.error).finally(() => setLoading(false));

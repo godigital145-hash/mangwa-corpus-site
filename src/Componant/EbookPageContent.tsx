@@ -3,7 +3,7 @@ import EbooksAndMagazines from "./EbooksAndMagazines";
 import SectionLibrairie from "./SectionLibrairie";
 
 export default function EbookPageContent() {
-  const [activeTab, setActiveTab] = useState<'ebook' | 'magazine'>('ebook');
+  const [activeTab, setActiveTab] = useState<'ebook' | 'magazine'>('magazine');
 
   return (
     <>
