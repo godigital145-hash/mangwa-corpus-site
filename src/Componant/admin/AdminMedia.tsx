@@ -76,7 +76,7 @@ export default function AdminMedia({ token }: { token: string }) {
   };
 
   const MediaGrid = ({ files }: { files: MediaFile[] }) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {files.map((file) => {
         const url = mediaUrl(file.key);
         const isImage = file.content_type?.startsWith("image/");
@@ -169,8 +169,8 @@ export default function AdminMedia({ token }: { token: string }) {
 
       {/* Contenu groupé par type */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="aspect-square bg-gray-100 animate-pulse rounded-xl" />)}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => <div key={i} className="aspect-square bg-gray-100 animate-pulse rounded-xl" />)}
         </div>
       ) : (
         <div className="flex flex-col gap-8">
