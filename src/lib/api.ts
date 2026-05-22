@@ -87,6 +87,7 @@ export type MediaFile = {
   content_type: string | null
   size: number | null
   folder: string | null
+  media_type: string | null
   created_at: string
 }
 

@@ -19,13 +19,21 @@ function formatBytes(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
+function getMediaTypeLabel(type: string | null): string {
+  switch (type) {
+    case 'image': return 'Images';
+    case 'audio': return 'Audio';
+    case 'ebook': return 'E-books';
+    default: return 'Autres';
+  }
+}
+
 export default function AdminMedia({ token }: { token: string }) {
   const [items, setItems] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadPct, setUploadPct] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [filterFolder, setFilterFolder] = useState<string>("all");
 
   const reload = () =>
     api.media().then(setItems).catch(() => setError("Erreur de chargement")).finally(() => setLoading(false));
@@ -60,7 +68,54 @@ export default function AdminMedia({ token }: { token: string }) {
     setItems((prev) => prev.filter((m) => m.key !== key));
   }
 
-  const filtered = filterFolder === "all" ? items : items.filter((m) => m.folder === filterFolder);
+  const grouped = {
+    image: items.filter((m) => m.media_type === 'image'),
+    audio: items.filter((m) => m.media_type === 'audio'),
+    ebook: items.filter((m) => m.media_type === 'ebook'),
+    other: items.filter((m) => !m.media_type),
+  };
+
+  const MediaGrid = ({ files }: { files: MediaFile[] }) => (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      {files.map((file) => {
+        const url = mediaUrl(file.key);
+        const isImage = file.content_type?.startsWith("image/");
+        return (
+          <div key={file.key} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden group">
+            <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+              {isImage && url
+                ? <img src={url} alt={file.filename} className="w-full h-full object-cover" />
+                : <div className="flex flex-col items-center gap-2 text-gray-400 px-3 text-center">
+                  <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                  </svg>
+                  <span className="text-xs truncate w-full text-center">{file.content_type}</span>
+                </div>
+              }
+            </div>
+            <div className="p-3">
+              <p className="text-xs font-medium text-gray-800 truncate" title={file.filename}>{file.filename}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{formatBytes(file.size)}</p>
+              <div className="flex gap-2 mt-2">
+                {url && (
+                  <a href={url} target="_blank" className="text-xs text-blue-600 hover:underline">Voir</a>
+                )}
+                <button
+                  onClick={() => handleDelete(file.key)}
+                  className="text-xs text-red-500 hover:text-red-700"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      {files.length === 0 && (
+        <div className="col-span-4 py-8 text-center text-gray-400 text-sm">Aucun fichier</div>
+      )}
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -112,72 +167,39 @@ export default function AdminMedia({ token }: { token: string }) {
         )}
       </div>
 
-      {/* Filtres */}
-      <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={() => setFilterFolder("all")}
-          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${filterFolder === "all" ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-        >
-          Tous ({items.length})
-        </button>
-        {FOLDERS.map((f) => {
-          const count = items.filter((m) => m.folder === f).length;
-          if (count === 0) return null;
-          return (
-            <button
-              key={f}
-              onClick={() => setFilterFolder(f)}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${filterFolder === f ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-            >
-              {f} ({count})
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Liste */}
+      {/* Contenu groupé par type */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => <div key={i} className="aspect-square bg-gray-100 animate-pulse rounded-xl" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-6 lg:grid-cols-6 gap-4">
-          {filtered.map((file) => {
-            const url = mediaUrl(file.key);
-            const isImage = file.content_type?.startsWith("image/");
-            return (
-              <div key={file.key} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden group">
-                <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
-                  {isImage && url
-                    ? <img src={url} alt={file.filename} className="w-full h-full object-cover" />
-                    : <div className="flex flex-col items-center gap-2 text-gray-400 px-3 text-center">
-                      <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                      </svg>
-                      <span className="text-xs truncate w-full text-center">{file.content_type}</span>
-                    </div>
-                  }
-                </div>
-                <div className="p-3">
-                  <p className="text-xs font-medium text-gray-800 truncate" title={file.filename}>{file.filename}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{formatBytes(file.size)}</p>
-                  <div className="flex gap-2 mt-2">
-                    {url && (
-                      <a href={url} target="_blank" className="text-xs text-blue-600 hover:underline">Voir</a>
-                    )}
-                    <button
-                      onClick={() => handleDelete(file.key)}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          {filtered.length === 0 && (
-            <div className="col-span-4 py-16 text-center text-gray-400">Aucun fichier</div>
+        <div className="flex flex-col gap-8">
+          {grouped.image.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">📸 Images ({grouped.image.length})</h3>
+              <MediaGrid files={grouped.image} />
+            </div>
+          )}
+          {grouped.audio.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">🎵 Audio ({grouped.audio.length})</h3>
+              <MediaGrid files={grouped.audio} />
+            </div>
+          )}
+          {grouped.ebook.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">📚 E-books ({grouped.ebook.length})</h3>
+              <MediaGrid files={grouped.ebook} />
+            </div>
+          )}
+          {grouped.other.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">📄 Autres ({grouped.other.length})</h3>
+              <MediaGrid files={grouped.other} />
+            </div>
+          )}
+          {items.length === 0 && (
+            <div className="py-16 text-center text-gray-400">Aucun fichier</div>
           )}
         </div>
       )}
