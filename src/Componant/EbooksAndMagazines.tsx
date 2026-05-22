@@ -2,10 +2,15 @@ import { useState, useEffect } from "react";
 import Container from "./Container";
 import { api, mediaUrl, type Magazine } from "../lib/api";
 
-export default function EbooksAndMagazines() {
+type Props = {
+  activeTab?: 'ebook' | 'magazine';
+  onTabChange?: (tab: 'ebook' | 'magazine') => void;
+};
+
+export default function EbooksAndMagazines({ activeTab: controlledTab, onTabChange }: Props = {}) {
   const [magazines, setMagazines] = useState<Magazine[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'ebook' | 'magazine'>('ebook');
+  const [activeTab, setActiveTab] = useState<'ebook' | 'magazine'>(controlledTab || 'ebook');
 
   useEffect(() => {
     api.magazines().then(setMagazines).catch(console.error).finally(() => setLoading(false));
@@ -34,7 +39,10 @@ export default function EbooksAndMagazines() {
         {/* Onglets */}
         <div className="flex gap-4 border-b border-gray-200 mb-8">
           <button
-            onClick={() => setActiveTab('ebook')}
+            onClick={() => {
+              setActiveTab('ebook');
+              onTabChange?.('ebook');
+            }}
             className={`pb-3 font-bold text-lg transition-colors ${
               activeTab === 'ebook'
                 ? 'text-[#00bcd4] border-b-2 border-[#00bcd4]'
@@ -44,7 +52,10 @@ export default function EbooksAndMagazines() {
             E-Books
           </button>
           <button
-            onClick={() => setActiveTab('magazine')}
+            onClick={() => {
+              setActiveTab('magazine');
+              onTabChange?.('magazine');
+            }}
             className={`pb-3 font-bold text-lg transition-colors ${
               activeTab === 'magazine'
                 ? 'text-[#00bcd4] border-b-2 border-[#00bcd4]'
