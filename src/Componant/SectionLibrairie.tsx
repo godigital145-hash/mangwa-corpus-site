@@ -4,12 +4,18 @@ import Container from "./Container";
 import Titre from "./Titre";
 import { api, mediaUrl, type Magazine } from "../lib/api";
 
-export default function SectionLibrairie({ limit = false }: { limit?: boolean }) {
+export default function SectionLibrairie({ limit = false, type }: { limit?: boolean; type?: 'ebook' | 'magazine' }) {
   const [magazines, setMagazines] = useState<Magazine[]>([]);
 
   useEffect(() => {
     api.magazines().then(setMagazines).catch(console.error);
   }, []);
+
+  const filtered = magazines.filter((mag) => {
+    if (!type) return true;
+    if (type === 'ebook') return mag.type === 'ebook' || !mag.type;
+    return mag.type === 'magazine';
+  });
 
   return (
     <section className="w-full lg:mt-[100px]">
@@ -17,7 +23,7 @@ export default function SectionLibrairie({ limit = false }: { limit?: boolean })
         <Titre titre="Notre librairie" />
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
-          {(limit ? magazines.slice(0, 4) : magazines).map((mag) => (
+          {(limit ? filtered.slice(0, 4) : filtered).map((mag) => (
             <CarteLibrairie
               key={mag.id}
               imageUrl={mediaUrl(mag.cover) ?? ''}
@@ -28,7 +34,7 @@ export default function SectionLibrairie({ limit = false }: { limit?: boolean })
           ))}
         </div>
 
-        {limit && magazines.length > 0 && (
+        {limit && filtered.length > 0 && (
           <div className="flex justify-center mt-10">
             <a
               href="/ebook"
