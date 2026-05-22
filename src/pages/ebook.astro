@@ -1,12 +1,11 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Header from "../Componant/Header";
-import PanneauEdition from "../Componant/PanneauEdition";
-import ListeEditions from "../Componant/ListeEditions";
 import SectionLibrairie from "../Componant/SectionLibrairie";
 import Footer from "../Componant/Footer";
 import Container from "../Componant/Container";
 import Banniere from "../Componant/Banniere";
+import EbooksAndMagazines from "../Componant/EbooksAndMagazines";
 ---
 
 <Layout
@@ -16,14 +15,14 @@ import Banniere from "../Componant/Banniere";
 
   <Container>
     <h1 class='text-[22px] sm:text-[36px] font-bold text-gray-900 mt-6 mb-4'>
-      E-Book
+      E-Books & Magazines
     </h1>
   </Container>
   <Container client:load>
     <Banniere page='mag' client:load />
   </Container>
 
-  <ListeEditions client:load />
+  <EbooksAndMagazines client:load />
   <SectionLibrairie client:load />
   <Footer client:load />
 </Layout>

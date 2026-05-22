@@ -75,7 +75,7 @@ export default function AdminMagazines({ token }: { token: string }) {
               <tr>
                 <th className="text-left px-4 py-3 text-gray-600 font-semibold">Couverture</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-semibold">Titre</th>
-                <th className="text-left px-4 py-3 text-gray-600 font-semibold">Numéro</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-semibold">Type</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-semibold">Catégorie</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-semibold">Mis en avant</th>
                 <th className="px-4 py-3" />
@@ -91,7 +91,7 @@ export default function AdminMagazines({ token }: { token: string }) {
                     }
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900">{mag.title}</td>
-                  <td className="px-4 py-3 text-gray-500">#{mag.issue_number ?? "—"}</td>
+                  <td className="px-4 py-3 text-gray-500 capitalize">{mag.type ?? "—"}</td>
                   <td className="px-4 py-3 text-gray-500">{mag.category ?? "—"}</td>
                   <td className="px-4 py-3">
                     {mag.featured ? (
@@ -118,7 +118,7 @@ export default function AdminMagazines({ token }: { token: string }) {
               ))}
               {items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">Aucun magazine</td>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400">Aucun magazine</td>
                 </tr>
               )}
             </tbody>
@@ -142,8 +142,12 @@ export default function AdminMagazines({ token }: { token: string }) {
               <Field label="Description" name="description" textarea defaultValue={modal.item?.description ?? ""} />
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Numéro" name="issue_number" type="number" defaultValue={modal.item?.issue_number?.toString() ?? ""} />
-                <Field label="Catégorie" name="category" defaultValue={modal.item?.category ?? ""} />
+                <FieldSelect label="Type" name="type" options={[
+                  { value: 'ebook', label: 'Ebook' },
+                  { value: 'magazine', label: 'Magazine' },
+                ]} defaultValue={modal.item?.type ?? ""} />
               </div>
+              <Field label="Catégorie" name="category" defaultValue={modal.item?.category ?? ""} />
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Prix (FCFA)" name="price" type="number" defaultValue={modal.item?.price?.toString() ?? ""} />
                 <Field label="Pages" name="pages" type="number" defaultValue={modal.item?.pages?.toString() ?? ""} />
@@ -209,6 +213,23 @@ function Field({ label, name, required, type = "text", textarea, defaultValue }:
         ? <textarea name={name} rows={3} defaultValue={defaultValue} className={cls} />
         : <input type={type} name={name} required={required} defaultValue={defaultValue} className={cls} />
       }
+    </label>
+  );
+}
+
+function FieldSelect({ label, name, options, defaultValue }: {
+  label: string; name: string; options: { value: string; label: string }[]; defaultValue?: string;
+}) {
+  const cls = "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#00bcd4]";
+  return (
+    <label className="flex flex-col gap-1 text-sm text-gray-700">
+      {label}
+      <select name={name} defaultValue={defaultValue ?? ""} className={cls}>
+        <option value="">— Sélectionner —</option>
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
     </label>
   );
 }

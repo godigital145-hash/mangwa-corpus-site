@@ -13,6 +13,7 @@ export type Magazine = {
   description: string | null
   issue_number: number | null
   category: string | null
+  type: string | null
   published_at: string | null
   featured: number
   price: number | null
