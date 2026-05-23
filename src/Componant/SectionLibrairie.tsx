@@ -2,20 +2,27 @@ import { useState, useEffect } from "react";
 import CarteLibrairie from "./CarteLibrairie";
 import Container from "./Container";
 import Titre from "./Titre";
-import { api, mediaUrl, type Magazine } from "../lib/api";
+import { api, mediaUrl } from "../lib/api";
+
+type Item = { id: number; title: string; cover: string | null; category?: string | null };
 
 export default function SectionLibrairie({ limit = false, type }: { limit?: boolean; type?: 'ebook' | 'magazine' }) {
-  const [magazines, setMagazines] = useState<Magazine[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
-    api.magazines().then(setMagazines).catch(console.error);
-  }, []);
-
-  const filtered = magazines.filter((mag) => {
-    if (!type) return true;
-    if (type === 'ebook') return mag.type === 'ebook' || !mag.type;
-    return mag.type === 'magazine';
-  });
+    if (type === 'ebook') {
+      api.ebooks().then((arr) => setItems(arr.map((e) => ({ id: e.id, title: e.title, cover: e.cover })))).catch(console.error);
+    } else if (type === 'magazine') {
+      api.magazines().then((arr) => setItems(arr.map((m) => ({ id: m.id, title: m.title, cover: m.cover, category: m.category })))).catch(console.error);
+    } else {
+      Promise.all([api.magazines(), api.ebooks()])
+        .then(([m, e]) => setItems([
+          ...m.map((x) => ({ id: x.id, title: x.title, cover: x.cover, category: x.category })),
+          ...e.map((x) => ({ id: x.id, title: x.title, cover: x.cover })),
+        ]))
+        .catch(console.error);
+    }
+  }, [type]);
 
   return (
     <section className="w-full lg:mt-[100px]">
@@ -23,18 +30,18 @@ export default function SectionLibrairie({ limit = false, type }: { limit?: bool
         <Titre titre="Notre librairie" />
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
-          {(limit ? filtered.slice(0, 4) : filtered).map((mag) => (
+          {(limit ? items.slice(0, 4) : items).map((it) => (
             <CarteLibrairie
-              key={mag.id}
-              imageUrl={mediaUrl(mag.cover) ?? ''}
-              titre={mag.title}
-              auteur={mag.category ?? undefined}
-              href={`/ebook/${mag.id}`}
+              key={`${type ?? 'all'}-${it.id}`}
+              imageUrl={mediaUrl(it.cover) ?? ''}
+              titre={it.title}
+              auteur={it.category ?? undefined}
+              href={`/ebook/${it.id}`}
             />
           ))}
         </div>
 
-        {limit && filtered.length > 0 && (
+        {limit && items.length > 0 && (
           <div className="flex justify-center mt-10">
             <a
               href="/ebook"

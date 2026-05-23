@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { api, mediaUrl, type Magazine } from "../lib/api";
+import { api, mediaUrl, type Ebook } from "../lib/api";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 const MAX_PREVIEW_PAGES = 6;
@@ -149,12 +149,12 @@ function NoPdfPlaceholder() {
 }
 
 export default function EbookDetailViewer({ id }: { id: string }) {
-  const [mag, setMag] = useState<Magazine | null>(null);
+  const [mag, setMag] = useState<Ebook | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    api.magazine(id)
+    api.ebook(id)
       .then((data) => {
         if (!data || (data as any).error) {
           setNotFound(true);
@@ -185,7 +185,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
   if (notFound || !mag) {
     return (
       <div className="py-16 text-center text-gray-400">
-        <p className="text-[18px] font-medium">Magazine introuvable</p>
+        <p className="text-[18px] font-medium">E-Book introuvable</p>
         <a href="/ebook" className="text-[#00bcd4] text-[14px] mt-2 inline-block hover:underline">
           ← Retour aux E-Books
         </a>
@@ -196,7 +196,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
   const coverUrl = mediaUrl(mag.cover);
   const pdfPreviewUrl = mag.pdf_preview ? mediaUrl(mag.pdf_preview) : null;
   const pdfFileUrl = mag.pdf_file ? mediaUrl(mag.pdf_file) : null;
-  const paymentUrl = `/paiement?type=magazine&id=${id}`;
+  const paymentUrl = `/paiement?type=ebook&id=${id}`;
 
   return (
     <div className="flex flex-col gap-12 py-8">
@@ -215,7 +215,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
         {/* Détails */}
         <div className="lg:col-span-3 flex flex-col gap-5">
           <span className="inline-block text-[11px] text-[#00bcd4] uppercase tracking-widest font-semibold">
-            Magazine
+            E-Book
             {mag.published_at ? ` · ${new Date(mag.published_at).getFullYear()}` : ""}
             {mag.pages ? ` · ${mag.pages} pages` : ""}
           </span>
@@ -224,19 +224,20 @@ export default function EbookDetailViewer({ id }: { id: string }) {
             <h1 className="text-[28px] sm:text-[36px] font-extrabold text-gray-900 uppercase leading-tight">
               {mag.title}
             </h1>
-            {mag.subtitle && (
-              <p className="text-gray-500 text-[16px] mt-1">{mag.subtitle}</p>
-            )}
           </div>
 
           {mag.description && (
             <p className="text-[15px] text-gray-500 leading-relaxed">{mag.description}</p>
           )}
 
-          {/* Méta */}
+          {mag.editorial && (
+            <div className="bg-gray-50 border-l-4 border-[#00bcd4] px-5 py-4">
+              <p className="text-[11px] text-[#00bcd4] uppercase tracking-widest font-semibold mb-2">Éditorial</p>
+              <p className="text-[15px] text-gray-700 leading-relaxed whitespace-pre-line">{mag.editorial}</p>
+            </div>
+          )}
+
           <ul className="flex flex-col gap-1.5 text-[14px] text-gray-600">
-            {mag.category && <li><span className="font-semibold">Catégorie :</span> {mag.category}</li>}
-            {mag.issue_number && <li><span className="font-semibold">Numéro :</span> #{String(mag.issue_number).padStart(3, '0')}</li>}
             {mag.published_at && <li><span className="font-semibold">Date :</span> {new Date(mag.published_at).toLocaleDateString("fr-FR")}</li>}
             {mag.price != null && <li><span className="font-semibold">Prix :</span> {mag.price.toLocaleString("fr-FR")} XAF</li>}
           </ul>

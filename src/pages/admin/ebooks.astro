@@ -1,0 +1,10 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import AdminEbooks from "../../Componant/admin/AdminEbooks";
+
+const token = Astro.cookies.get("admin_token")?.value ?? "";
+---
+
+<AdminLayout title="E-Books" active="ebooks">
+  <AdminEbooks token={token} client:load />
+</AdminLayout>

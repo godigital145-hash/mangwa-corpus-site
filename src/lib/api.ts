@@ -21,6 +21,24 @@ export type Magazine = {
   pdf_preview: string | null
   preview_start_page: number | null
   pages: number | null
+  editorial: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type Ebook = {
+  id: number
+  title: string
+  description: string | null
+  editorial: string | null
+  cover: string | null
+  pdf_file: string | null
+  pdf_preview: string | null
+  preview_start_page: number | null
+  pages: number | null
+  price: number | null
+  published_at: string | null
+  featured: number
   created_at: string
   updated_at: string
 }
@@ -187,6 +205,10 @@ export const api = {
     fetch(`${API_URL}/api/magazines`).then((r) => r.json()),
   magazine: (id: string): Promise<Magazine> =>
     fetch(`${API_URL}/api/magazines/${id}`).then((r) => r.json()),
+  ebooks: (): Promise<Ebook[]> =>
+    fetch(`${API_URL}/api/ebooks`).then((r) => r.json()),
+  ebook: (id: string): Promise<Ebook> =>
+    fetch(`${API_URL}/api/ebooks/${id}`).then((r) => r.json()),
   audios: (): Promise<Audio[]> =>
     fetch(`${API_URL}/api/audios`).then((r) => r.json()),
   audio: (id: string): Promise<Audio> =>
@@ -217,6 +239,10 @@ export function adminApi(token: string) {
         fetch(`${API_URL}/admin/magazines/${id}`, { method: 'PUT', headers: auth, body: form }),
       delete: (id: number) =>
         fetch(`${API_URL}/admin/magazines/${id}`, { method: 'DELETE', headers: auth }),
+    },
+    ebooks: {
+      delete: (id: number) =>
+        fetch(`${API_URL}/admin/ebooks/${id}`, { method: 'DELETE', headers: auth }),
     },
     audios: {
       create: (form: FormData) =>
@@ -315,6 +341,12 @@ export function adminApi(token: string) {
         xhrUpload(`${API_URL}/admin/magazines`, 'POST', form, onProgress),
       update: (id: number, form: FormData, onProgress: (pct: number) => void) =>
         xhrUpload(`${API_URL}/admin/magazines/${id}`, 'PUT', form, onProgress),
+    },
+    ebooksUpload: {
+      create: (form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/ebooks`, 'POST', form, onProgress),
+      update: (id: number, form: FormData, onProgress: (pct: number) => void) =>
+        xhrUpload(`${API_URL}/admin/ebooks/${id}`, 'PUT', form, onProgress),
     },
     mediaUpload: {
       upload: (form: FormData, onProgress: (pct: number) => void) =>

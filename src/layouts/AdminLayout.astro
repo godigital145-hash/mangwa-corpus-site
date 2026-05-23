@@ -2,7 +2,6 @@
 import "../styles/global.css";
 import { RiArrowLeftLongLine } from "../Componant/icons";
 import logo from "../assets/logo.png";
-
 interface Props {
   title?: string;
   active?: string;
@@ -13,6 +12,7 @@ const { title = "Administration", active = "" } = Astro.props;
 const nav = [
   { href: "/admin", label: "Tableau de bord", key: "dashboard" },
   { href: "/admin/magazines", label: "Magazines", key: "magazines" },
+  { href: "/admin/ebooks", label: "E-Books", key: "ebooks" },
   { href: "/admin/audios", label: "Audios", key: "audios" },
   { href: "/admin/videos", label: "Vidéos", key: "videos" },
   { href: "/admin/hero", label: "Bannières", key: "hero" },

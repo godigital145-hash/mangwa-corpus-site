@@ -9,23 +9,23 @@ import { api, mediaUrl } from "../../lib/api";
 const { id } = Astro.params;
 if (!id) return Astro.redirect("/ebook");
 
-let magazine = null;
-try { magazine = await api.magazine(id); } catch {}
+let ebook = null;
+try { ebook = await api.ebook(id); } catch {}
 
-const seoTitle = magazine?.title ?? "E-Book";
-const seoDesc = magazine?.description
-  ?? "Lisez ce magazine ou e-book africain en exclusivité sur Mangwa Corpus.";
-const seoImage = magazine?.cover ? mediaUrl(magazine.cover) ?? undefined : undefined;
+const seoTitle = ebook?.title ?? "E-Book";
+const seoDesc = ebook?.description
+  ?? "Lisez cet e-book africain en exclusivité sur Mangwa Corpus.";
+const seoImage = ebook?.cover ? mediaUrl(ebook.cover) ?? undefined : undefined;
 
-const jsonLd = magazine ? {
+const jsonLd = ebook ? {
   "@context": "https://schema.org",
   "@type": "Book",
-  name: magazine.title,
+  name: ebook.title,
   description: seoDesc,
   image: seoImage,
   inLanguage: "fr",
   publisher: { "@type": "Organization", name: "Mangwa Corpus" },
-  ...(magazine.published_at ? { datePublished: magazine.published_at } : {}),
+  ...(ebook.published_at ? { datePublished: ebook.published_at } : {}),
 } : undefined;
 ---
 
@@ -42,7 +42,7 @@ const jsonLd = magazine ? {
     <nav class="flex items-center gap-2 text-[13px] text-gray-400 mt-6 mb-2">
       <a href="/ebook" class="hover:text-gray-700 transition-colors">E-Book</a>
       <span>/</span>
-      <span class="text-gray-700 font-medium">{magazine?.title ?? "Détail"}</span>
+      <span class="text-gray-700 font-medium">{ebook?.title ?? "Détail"}</span>
     </nav>
 
     <EbookDetailViewer client:load id={id} />
