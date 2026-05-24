@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api, mediaUrl, type Magazine, type Ebook, type Audio, type Album } from "../lib/api";
 
 const API_URL = import.meta.env.PUBLIC_API_URL ?? "https://serveur.mangwacorpus.com";
@@ -6,6 +6,30 @@ const API_URL = import.meta.env.PUBLIC_API_URL ?? "https://serveur.mangwacorpus.
 type PaymentMethod = { id: string; name: string; type: string };
 type EntityType = "magazine" | "ebook" | "audio" | "album";
 type Item = { id: string | number; title: string; cover: string | null; price: number | null; subtitle?: string | null };
+type PaypalConfig = { client_id: string | null; env: string; currency: string; xaf_to_eur: number };
+
+declare global {
+  interface Window { paypal?: any }
+}
+
+function loadPaypalSdk(clientId: string, currency: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.paypal) return resolve();
+    const existing = document.querySelector<HTMLScriptElement>('script[data-paypal-sdk]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('PayPal SDK load error')), { once: true });
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${currency}&intent=capture`;
+    s.async = true;
+    s.dataset.paypalSdk = '1';
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('PayPal SDK load error'));
+    document.head.appendChild(s);
+  });
+}
 
 function formatPrice(price: number | null) {
   if (price == null || price === 0) return "Gratuit";
@@ -25,6 +49,10 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState<{ reference: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paypalConfig, setPaypalConfig] = useState<PaypalConfig | null>(null);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const paypalContainerRef = useRef<HTMLDivElement | null>(null);
+  const paypalButtonsRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchItem =
@@ -60,6 +88,11 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
               subtitle: a.artist,
             }));
 
+    fetch(`${API_URL}/api/paypal/config`)
+      .then((r) => r.json())
+      .then((cfg: PaypalConfig) => setPaypalConfig(cfg))
+      .catch(() => setPaypalConfig(null));
+
     Promise.all([
       fetchItem,
       fetch(`${API_URL}/api/payments/methods`).then((r) => r.json()),
@@ -75,6 +108,95 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [type, id]);
+
+  const selectedMethod = methods.find((m) => m.id === methodId) ?? null;
+  const isPaypalSelected = selectedMethod?.type === "paypal";
+
+  useEffect(() => {
+    if (!isPaypalSelected || !paypalConfig?.client_id || !item) return;
+    let cancelled = false;
+
+    loadPaypalSdk(paypalConfig.client_id, paypalConfig.currency)
+      .then(() => {
+        if (cancelled || !window.paypal || !paypalContainerRef.current) return;
+        if (paypalButtonsRef.current) {
+          try { paypalButtonsRef.current.close(); } catch {}
+        }
+        paypalContainerRef.current.innerHTML = "";
+
+        const buttons = window.paypal.Buttons({
+          style: { layout: "vertical", color: "blue", shape: "rect", label: "paypal" },
+          onClick: (_data: any, actions: any) => {
+            if (!name || !email) {
+              setError("Renseignez votre nom et e-mail avant de payer.");
+              return actions.reject();
+            }
+            setError(null);
+            return actions.resolve();
+          },
+          createOrder: async () => {
+            const res = await fetch(`${API_URL}/api/paypal/create-order`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                entity_type: type,
+                entity_id: String(item.id),
+                amount: item.price ?? 0,
+                name,
+                email,
+                phone: phone || undefined,
+              }),
+            });
+            const body = await res.json() as any;
+            if (!res.ok || !body.order_id) {
+              setError(body?.error ?? "Erreur lors de la création de la commande PayPal.");
+              throw new Error(body?.error ?? "create-order failed");
+            }
+            return body.order_id;
+          },
+          onApprove: async (data: any) => {
+            setSaving(true);
+            try {
+              const res = await fetch(`${API_URL}/api/paypal/capture-order`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ order_id: data.orderID }),
+              });
+              const body = await res.json() as any;
+              if (!res.ok || body.status !== "paid") {
+                setError(body?.error ?? "Erreur lors de la capture du paiement.");
+                return;
+              }
+              setDone({ reference: body.reference });
+            } catch {
+              setError("Erreur réseau pendant la capture du paiement.");
+            } finally {
+              setSaving(false);
+            }
+          },
+          onError: (err: any) => {
+            console.error("[PayPal]", err);
+            setError("Erreur PayPal — veuillez réessayer.");
+          },
+        });
+
+        buttons.render(paypalContainerRef.current);
+        paypalButtonsRef.current = buttons;
+        setPaypalReady(true);
+      })
+      .catch((err) => {
+        console.error("[PayPal SDK]", err);
+        setError("Impossible de charger PayPal.");
+      });
+
+    return () => {
+      cancelled = true;
+      if (paypalButtonsRef.current) {
+        try { paypalButtonsRef.current.close(); } catch {}
+        paypalButtonsRef.current = null;
+      }
+    };
+  }, [isPaypalSelected, paypalConfig, item, name, email, phone, type]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -257,18 +379,37 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
           </div>
         )}
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-[13px] text-amber-800">
-          <strong>Comment ça marche :</strong> Envoyez le paiement via la méthode choisie, puis soumettez ce formulaire.
-          Notre équipe confirmera votre accès sous 24h.
-        </div>
+        {!isPaypalSelected && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-[13px] text-amber-800">
+            <strong>Comment ça marche :</strong> Envoyez le paiement via la méthode choisie, puis soumettez ce formulaire.
+            Notre équipe confirmera votre accès sous 24h.
+          </div>
+        )}
 
-        <button
-          type="submit"
-          disabled={saving || !methodId}
-          className="bg-[#00bcd4] hover:bg-[#00acc1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white font-bold py-3.5 rounded-lg text-[15px]"
-        >
-          {saving ? "Envoi en cours…" : `Confirmer la demande — ${formatPrice(item.price)}`}
-        </button>
+        {isPaypalSelected && paypalConfig?.client_id && item.price != null && item.price > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-[13px] text-blue-800">
+            Montant débité en EUR : <strong>{(item.price * paypalConfig.xaf_to_eur).toFixed(2)} €</strong>
+            <span className="text-blue-600"> ({formatPrice(item.price)})</span>
+          </div>
+        )}
+
+        {isPaypalSelected && !paypalConfig?.client_id && (
+          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-[13px] text-red-700">
+            PayPal n'est pas encore configuré. Choisissez un autre moyen de paiement.
+          </div>
+        )}
+
+        {isPaypalSelected ? (
+          <div ref={paypalContainerRef} className={paypalReady ? "" : "min-h-12.5"} />
+        ) : (
+          <button
+            type="submit"
+            disabled={saving || !methodId}
+            className="bg-[#00bcd4] hover:bg-[#00acc1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white font-bold py-3.5 rounded-lg text-[15px]"
+          >
+            {saving ? "Envoi en cours…" : `Confirmer la demande — ${formatPrice(item.price)}`}
+          </button>
+        )}
       </form>
     </div>
   );
