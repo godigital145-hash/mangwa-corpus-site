@@ -82,8 +82,10 @@ export default function Footer() {
           <div className="lg:col-span-2 flex flex-col gap-5">
             <img src={logo.src} alt="Mangwa Corpus" className="h-14 w-auto object-contain" />
             <p className="text-white/50 text-[13px] leading-relaxed">
-              Mangwa Corpus est votre plateforme de référence pour les livres, magazines et contenus
-              audio africains. Plongez au cœur de l'information et du son.
+              Mangwa Corpus
+              <br />
+              <br />
+              Mangwa Corpus est une entreprise de productions  artistique,  culturel et événementiel basée à Douala au Cameroun. Il a pour Président Directeur Général (CEO)  TCHINDA DAGUEKO Raymond
             </p>
             {/* Réseaux sociaux */}
             <div className="flex items-center gap-3 mt-1">
