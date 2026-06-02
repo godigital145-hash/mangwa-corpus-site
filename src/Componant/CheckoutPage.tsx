@@ -111,6 +111,41 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
 
   const selectedMethod = methods.find((m) => m.id === methodId) ?? null;
   const isPaypalSelected = selectedMethod?.type === "paypal";
+  const isMonetbilSelected = selectedMethod?.type === "monetbil";
+
+  async function handleMonetbil() {
+    if (!item) return;
+    if (!name || !email) {
+      setError("Renseignez votre nom et e-mail avant de payer.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/monetbil/create-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entity_type: type,
+          entity_id: String(item.id),
+          amount: item.price ?? 0,
+          name,
+          email,
+          phone: phone || undefined,
+        }),
+      });
+      const body = await res.json() as any;
+      if (!res.ok || !body.payment_url) {
+        setError(body?.error ?? "Impossible d'initier le paiement Monetbil.");
+        return;
+      }
+      window.location.href = body.payment_url;
+    } catch {
+      setError("Erreur réseau — veuillez réessayer.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   useEffect(() => {
     if (!isPaypalSelected || !paypalConfig?.client_id || !item) return;
@@ -379,10 +414,16 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
           </div>
         )}
 
-        {!isPaypalSelected && (
+        {!isPaypalSelected && !isMonetbilSelected && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-[13px] text-amber-800">
             <strong>Comment ça marche :</strong> Envoyez le paiement via la méthode choisie, puis soumettez ce formulaire.
             Notre équipe confirmera votre accès sous 24h.
+          </div>
+        )}
+
+        {isMonetbilSelected && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-[13px] text-blue-800">
+            <strong>Mobile Money :</strong> Vous serez redirigé vers la page Monetbil pour finaliser le paiement avec MTN ou Orange Money.
           </div>
         )}
 
@@ -401,6 +442,15 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
 
         {isPaypalSelected ? (
           <div ref={paypalContainerRef} className={paypalReady ? "" : "min-h-12.5"} />
+        ) : isMonetbilSelected ? (
+          <button
+            type="button"
+            onClick={handleMonetbil}
+            disabled={saving}
+            className="bg-[#00bcd4] hover:bg-[#00acc1] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white font-bold py-3.5 rounded-lg text-[15px]"
+          >
+            {saving ? "Redirection…" : `Payer avec Mobile Money — ${formatPrice(item.price)}`}
+          </button>
         ) : (
           <button
             type="submit"

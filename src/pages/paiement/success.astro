@@ -1,0 +1,17 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../Componant/Header";
+import Footer from "../../Componant/Footer";
+import Container from "../../Componant/Container";
+import PaiementSuccess from "../../Componant/PaiementSuccess";
+---
+
+<Layout title="Paiement confirmé" description="Votre paiement a été reçu.">
+  <Header client:load />
+
+  <Container>
+    <PaiementSuccess client:load />
+  </Container>
+
+  <Footer client:load />
+</Layout>
