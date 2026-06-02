@@ -1,0 +1,17 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../Componant/Header";
+import Footer from "../../Componant/Footer";
+import Container from "../../Componant/Container";
+import PaiementError from "../../Componant/PaiementError";
+---
+
+<Layout title="Paiement impossible" description="Une erreur est survenue lors du paiement.">
+  <Header client:load />
+
+  <Container>
+    <PaiementError client:load />
+  </Container>
+
+  <Footer client:load />
+</Layout>

@@ -1,4 +1,4 @@
-const API_URL = 'https://serveur.mangwacorpus.com'
+const API_URL = "http://127.0.0.1:8788" || 'https://serveur.mangwacorpus.com'
 
 export function mediaUrl(key: string | null | undefined): string | null {
   if (!key) return null

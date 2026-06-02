@@ -136,12 +136,13 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
       });
       const body = await res.json() as any;
       if (!res.ok || !body.payment_url) {
-        setError(body?.error ?? "Impossible d'initier le paiement Monetbil.");
+        const reason = body?.error ?? "Impossible d'initier le paiement Monetbil.";
+        window.location.href = `/paiement/error?reason=${encodeURIComponent(reason)}`;
         return;
       }
       window.location.href = body.payment_url;
     } catch {
-      setError("Erreur réseau — veuillez réessayer.");
+      window.location.href = `/paiement/error?reason=${encodeURIComponent("Erreur réseau — veuillez réessayer.")}`;
     } finally {
       setSaving(false);
     }
