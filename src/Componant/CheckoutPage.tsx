@@ -45,6 +45,7 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("CM");
   const [methodId, setMethodId] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState<{ reference: string } | null>(null);
@@ -132,6 +133,7 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
           name,
           email,
           phone: phone || undefined,
+          country,
         }),
       });
       const body = await res.json() as any;
@@ -423,9 +425,28 @@ export default function CheckoutPage({ type, id }: { type: EntityType; id: strin
         )}
 
         {isMonetbilSelected && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-[13px] text-blue-800">
-            <strong>Mobile Money :</strong> Vous serez redirigé vers la page Monetbil pour finaliser le paiement avec MTN ou Orange Money.
-          </div>
+          <>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-gray-700">Pays *</label>
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="border border-gray-200 rounded-lg px-4 py-2.5 text-[14px] text-gray-900 focus:outline-none focus:border-[#00bcd4] bg-white"
+              >
+                <option value="CM">Cameroun (XAF)</option>
+                <option value="CD">RDC (CDF)</option>
+                <option value="SN">Sénégal (XOF)</option>
+                <option value="CG">Congo Brazzaville (XAF)</option>
+                <option value="BJ">Bénin (XOF)</option>
+                <option value="LR">Liberia (LRD)</option>
+                <option value="UG">Ouganda (UGX)</option>
+                <option value="GA">Gabon (XAF)</option>
+              </select>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-[13px] text-blue-800">
+              <strong>Mobile Money :</strong> Vous serez redirigé vers la page Monetbil pour finaliser le paiement avec votre opérateur mobile.
+            </div>
+          </>
         )}
 
         {isPaypalSelected && paypalConfig?.client_id && item.price != null && item.price > 0 && (
