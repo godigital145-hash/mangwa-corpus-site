@@ -56,7 +56,7 @@ export default function EbooksAndMagazines({ activeTab: controlledTab, onTabChan
         published_at: m.published_at, pdf_preview: m.pdf_preview, price: m.price,
       }));
 
-  const detailHref = (id: number) => isEbookTab ? `/ebook/${id}` : `/ebook/${id}`;
+  const detailHref = (id: number) => isEbookTab ? `/ebook/${id}` : `/magazine/${id}`;
   const paymentType = isEbookTab ? 'ebook' : 'magazine';
 
   return (

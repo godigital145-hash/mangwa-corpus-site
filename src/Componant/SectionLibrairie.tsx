@@ -36,7 +36,7 @@ export default function SectionLibrairie({ limit = false, type }: { limit?: bool
               imageUrl={mediaUrl(it.cover) ?? ''}
               titre={it.title}
               auteur={it.category ?? undefined}
-              href={`/ebook/${it.id}`}
+              href={type === 'ebook' ? `/ebook/${it.id}` : `/magazine/${it.id}`}
             />
           ))}
         </div>

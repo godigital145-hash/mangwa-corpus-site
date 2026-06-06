@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { api, mediaUrl, type Ebook } from "../lib/api";
+import { api, mediaUrl, type Ebook, type Magazine } from "../lib/api";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 const MAX_PREVIEW_PAGES = 6;
@@ -148,13 +148,16 @@ function NoPdfPlaceholder() {
   );
 }
 
-export default function EbookDetailViewer({ id }: { id: string }) {
-  const [mag, setMag] = useState<Ebook | null>(null);
+type Kind = "ebook" | "magazine";
+
+export default function EbookDetailViewer({ id, kind = "ebook" }: { id: string; kind?: Kind }) {
+  const [mag, setMag] = useState<Ebook | Magazine | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    api.ebook(id)
+    const fetcher = kind === "magazine" ? api.magazine(id) : api.ebook(id);
+    fetcher
       .then((data) => {
         if (!data || (data as any).error) {
           setNotFound(true);
@@ -164,7 +167,10 @@ export default function EbookDetailViewer({ id }: { id: string }) {
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, kind]);
+
+  const label = kind === "magazine" ? "Magazine" : "E-Book";
+  const backHref = kind === "magazine" ? "/ebook" : "/ebook";
 
   if (loading) {
     return (
@@ -185,9 +191,9 @@ export default function EbookDetailViewer({ id }: { id: string }) {
   if (notFound || !mag) {
     return (
       <div className="py-16 text-center text-gray-400">
-        <p className="text-[18px] font-medium">E-Book introuvable</p>
-        <a href="/ebook" className="text-[#00bcd4] text-[14px] mt-2 inline-block hover:underline">
-          ← Retour aux E-Books
+        <p className="text-[18px] font-medium">{label} introuvable</p>
+        <a href={backHref} className="text-[#00bcd4] text-[14px] mt-2 inline-block hover:underline">
+          ← Retour
         </a>
       </div>
     );
@@ -196,7 +202,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
   const coverUrl = mediaUrl(mag.cover);
   const pdfPreviewUrl = mag.pdf_preview ? mediaUrl(mag.pdf_preview) : null;
   const pdfFileUrl = mag.pdf_file ? mediaUrl(mag.pdf_file) : null;
-  const paymentUrl = `/paiement?type=ebook&id=${id}`;
+  const paymentUrl = `/paiement?type=${kind}&id=${id}`;
 
   return (
     <div className="flex flex-col gap-12 py-8">
@@ -215,7 +221,7 @@ export default function EbookDetailViewer({ id }: { id: string }) {
         {/* Détails */}
         <div className="lg:col-span-3 flex flex-col gap-5">
           <span className="inline-block text-[11px] text-[#00bcd4] uppercase tracking-widest font-semibold">
-            E-Book
+            {label}
             {mag.published_at ? ` · ${new Date(mag.published_at).getFullYear()}` : ""}
             {mag.pages ? ` · ${mag.pages} pages` : ""}
           </span>
