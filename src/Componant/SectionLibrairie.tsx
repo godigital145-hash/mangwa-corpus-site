@@ -6,7 +6,7 @@ import { api, mediaUrl } from "../lib/api";
 
 type Item = { id: number; title: string; cover: string | null; category?: string | null };
 
-export default function SectionLibrairie({ limit = false, type }: { limit?: boolean; type?: 'ebook' | 'magazine' }) {
+export default function SectionLibrairie({ limit = false, type = 'magazine' }: { limit?: boolean; type?: 'ebook' | 'magazine' }) {
   const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
