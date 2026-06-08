@@ -1,0 +1,23 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../Componant/Header";
+import Footer from "../../Componant/Footer";
+import Container from "../../Componant/Container";
+import SectionAlbums from "../../Componant/SectionAlbums";
+---
+
+<Layout
+  title="Albums"
+  description="Découvrez tous les albums africains sur Mangwa Corpus."
+>
+  <Header client:load />
+
+  <Container>
+    <h1 class="text-[22px] sm:text-[26px] lg:text-[30px] font-bold text-gray-900 mt-6 mb-4">
+      Albums
+    </h1>
+  </Container>
+
+  <SectionAlbums client:load />
+  <Footer client:load />
+</Layout>

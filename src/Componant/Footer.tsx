@@ -30,8 +30,8 @@ const TwitterIcon = () => (
 
 const links = {
   ebooks: ["Livres"],
-  magazines: ["Édition Spéciale", "Editions Limitées", "Édition 1, 2, 3", "Édition 4, 5, 6"],
-  audios: ["Albums", "Emission Vidéos", "Vidéos", "Podcasts", "Playlists"],
+  magazines: ["Édition Spéciale", "Editions Limitées"],
+  audios: ["Albums", "Emission Vidéos", "Vidéos", "Podcasts"],
   services: ["Paiement", "Partenariat", "Publicité", "À propos"],
 };
 

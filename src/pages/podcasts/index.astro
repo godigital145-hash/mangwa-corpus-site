@@ -1,0 +1,23 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../Componant/Header";
+import Footer from "../../Componant/Footer";
+import Container from "../../Componant/Container";
+import ListePodcasts from "../../Componant/ListePodcasts";
+---
+
+<Layout
+  title="Podcasts"
+  description="Écoutez nos podcasts africains sur Mangwa Corpus."
+>
+  <Header client:load />
+
+  <Container>
+    <h1 class="text-[22px] sm:text-[26px] lg:text-[30px] font-bold text-gray-900 mt-6 mb-4">
+      Podcasts
+    </h1>
+  </Container>
+
+  <ListePodcasts client:load />
+  <Footer client:load />
+</Layout>

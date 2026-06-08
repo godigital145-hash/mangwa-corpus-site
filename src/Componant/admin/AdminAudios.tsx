@@ -415,6 +415,17 @@ export default function AdminAudios({ token }: { token: string }) {
               <Field label="Titre *" name="title" required defaultValue={modal.item?.title} />
               <Field label="Artiste *" name="artist" required defaultValue={modal.item?.artist} />
               <label className="flex flex-col gap-1 text-sm text-gray-700">
+                Type
+                <select
+                  name="type"
+                  defaultValue={modal.item?.type ?? "musique"}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#00bcd4] transition-colors duration-150"
+                >
+                  <option value="musique">Musique</option>
+                  <option value="podcast">Podcast</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-sm text-gray-700">
                 Album
                 <select
                   name="album_id"

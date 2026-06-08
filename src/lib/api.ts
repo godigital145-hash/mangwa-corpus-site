@@ -62,6 +62,7 @@ export type Audio = {
   waveform: string | null
   preview_start: number | null
   preview_end: number | null
+  type: string | null
   created_at: string
   updated_at: string
 }
@@ -215,6 +216,12 @@ export const api = {
     fetch(`${API_URL}/api/audios/${id}`).then((r) => r.json()),
   videos: (): Promise<Video[]> =>
     fetch(`${API_URL}/api/videos`).then((r) => r.json()),
+  video: (id: string): Promise<Video> =>
+    fetch(`${API_URL}/api/videos/${id}`).then((r) => r.json()),
+  podcasts: (): Promise<Audio[]> =>
+    fetch(`${API_URL}/api/podcasts`).then((r) => r.json()),
+  podcast: (id: string): Promise<Audio> =>
+    fetch(`${API_URL}/api/podcasts/${id}`).then((r) => r.json()),
   hero: (page?: string): Promise<HeroSection[]> =>
     fetch(`${API_URL}/api/hero${page ? `?page=${encodeURIComponent(page)}` : ''}`).then((r) => r.json()),
   media: (): Promise<MediaFile[]> =>
