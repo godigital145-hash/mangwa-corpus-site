@@ -79,6 +79,7 @@ export type Video = {
   published_at: string | null
   featured: number
   free: number
+  type: string | null
   created_at: string
   updated_at: string
 }

@@ -120,6 +120,19 @@ export default function AdminVideos({ token }: { token: string }) {
               <Field label="Titre *" name="title" required defaultValue={modal.item?.title} />
               <Field label="Description" name="description" textarea defaultValue={modal.item?.description ?? ""} />
               <Field label="Catégorie" name="category" defaultValue={modal.item?.category ?? ""} />
+              <label className="flex flex-col gap-1 text-sm text-gray-700">
+                Type
+                <select
+                  name="type"
+                  defaultValue={modal.item?.type ?? "simple"}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#00bcd4] transition-colors duration-150"
+                >
+                  <option value="simple">Simple</option>
+                  <option value="emission">Émission</option>
+                  <option value="documentaire">Documentaire</option>
+                  <option value="clip">Clip</option>
+                </select>
+              </label>
               <Field label="URL vidéo (YouTube, Vimeo…)" name="video_url" defaultValue={modal.item?.video_url ?? ""} />
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Durée (secondes)" name="duration" type="number" defaultValue={modal.item?.duration?.toString() ?? ""} />

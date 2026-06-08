@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { adminApi } from "../../lib/api";
+import { adminApi, api } from "../../lib/api";
 import {
   IcSharpPermMedia,
   IcSharpCropLandscape,
@@ -37,11 +37,11 @@ export default function AdminDashboardCards({ token }: { token: string }) {
   useEffect(() => {
     const a = adminApi(token);
     Promise.allSettled([
-      fetch(`/api/magazines`).then((r) => r.json()).then((d: any[]) => ({ magazines: d.length })),
-      fetch(`/api/audios`).then((r) => r.json()).then((d: any[]) => ({ audios: d.length })),
-      fetch(`/api/videos`).then((r) => r.json()).then((d: any[]) => ({ videos: d.length })),
-      fetch(`/api/hero`).then((r) => r.json()).then((d: any[]) => ({ hero: d.length })),
-      fetch(`/api/media`).then((r) => r.json()).then((d: any[]) => ({ media: d.length })),
+      api.magazines().then((d) => ({ magazines: d.length })),
+      api.audios().then((d) => ({ audios: d.length })),
+      api.videos().then((d) => ({ videos: d.length })),
+      api.hero().then((d) => ({ hero: d.length })),
+      api.media().then((d) => ({ media: d.length })),
       a.users.list().then((d) => ({ users: d.length })),
       a.newsletter.list().then((d) => ({ newsletter: d.length })),
     ]).then((results) => {

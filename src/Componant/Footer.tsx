@@ -38,7 +38,20 @@ const links = {
 const serviceLinks: Record<string, string> = {
   "Partenariat": "/partenaires",
   "Publicité": "/publicite",
-  "Paiement": "/modalites-paiement"
+  "Paiement": "/modalites-paiement",
+  "À propos": "/qui-sommes-nous",
+};
+
+const audioVideoLinks: Record<string, string> = {
+  "Albums": "/album",
+  "Emission Vidéos": "/videos?type=emissions",
+  "Vidéos": "/videos",
+  "Podcasts": "/podcasts",
+};
+
+const magazineLinks: Record<string, string> = {
+  "Édition Spéciale": "/edition-speciale",
+  "Editions Limitées": "/magazines?type=editions-limitees",
 };
 
 export default function Footer() {
@@ -117,7 +130,7 @@ export default function Footer() {
             <ul className="flex flex-col gap-2.5">
               {links.ebooks.map((l) => (
                 <li key={l}>
-                  <a href="#" className="text-white/50 text-[13px] hover:text-[#00bcd4] transition-colors">
+                  <a href="/ebooks" className="text-white/50 text-[13px] hover:text-[#00bcd4] transition-colors">
                     {l}
                   </a>
                 </li>
@@ -133,7 +146,7 @@ export default function Footer() {
             <ul className="flex flex-col gap-2.5">
               {links.magazines.map((l) => (
                 <li key={l}>
-                  <a href="#" className="text-white/50 text-[13px] hover:text-[#00bcd4] transition-colors">
+                  <a href={magazineLinks[l] || "#"} className="text-white/50 text-[13px] hover:text-[#00bcd4] transition-colors">
                     {l}
                   </a>
                 </li>
@@ -149,7 +162,10 @@ export default function Footer() {
             <ul className="flex flex-col gap-2.5">
               {links.audios.map((l) => (
                 <li key={l}>
-                  <a href="#" className="text-white/50 text-[13px] hover:text-[#00bcd4] transition-colors">
+                  <a
+                    href={audioVideoLinks[l] || "#"}
+                    className="text-white/50 text-[13px] hover:text-[#00bcd4] transition-colors"
+                  >
                     {l}
                   </a>
                 </li>
