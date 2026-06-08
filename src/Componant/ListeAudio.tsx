@@ -8,6 +8,7 @@ import { audioEngine } from "../utils/audioEngine";
 import { api, mediaUrl, type Audio } from "../lib/api";
 import Titre from "./Titre";
 import { Waveform } from "./AudioItemPlayer";
+import { useReveal } from "../hooks/useReveal";
 
 export function FluentPlay32Filled(props: SVGProps<SVGSVGElement>) {
   return (
@@ -41,7 +42,8 @@ function formatTime(s: number) {
 
 
 
-function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, previewStart, previewEnd, price, free }: { id: string; titre: string; artiste: string; album?: string | null; albumId?: number | null; audioUrl: string; coverUrl?: string | null; previewStart?: number | null; previewEnd?: number | null; price?: number | null; free?: number }) {
+function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, previewStart, previewEnd, price, free, index = 0 }: { id: string; titre: string; artiste: string; album?: string | null; albumId?: number | null; audioUrl: string; coverUrl?: string | null; previewStart?: number | null; previewEnd?: number | null; price?: number | null; free?: number; index?: number }) {
+  const { ref: revealRef, visible: revealVisible } = useReveal<HTMLDivElement>();
   const engine = useAudioEngine();
   const isThisTrack = engine.currentAudioUrl === audioUrl;
   const playing = isThisTrack && engine.playing;
@@ -106,7 +108,11 @@ function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, prev
   };
 
   return (
-    <div className="relative bg-[#1c1c1c] overflow-hidden flex items-stretch">
+    <div
+      ref={revealRef}
+      style={{ ["--reveal-delay" as any]: `${Math.min(index, 6) * 60}ms` }}
+      className={`reveal ${revealVisible ? "is-visible" : ""} relative bg-[#1c1c1c] overflow-hidden flex items-stretch`}
+    >
 
       {/* Paywall overlay */}
       {showPaywall && isPaid && (
@@ -130,7 +136,7 @@ function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, prev
       )}
 
       {/* Thumbnail */}
-      <div className="w-20 sm:w-[146.75px] shrink-0 aspect-square bg-[#111] flex items-center justify-center overflow-hidden">
+      <div className="cover-zoom w-20 sm:w-[146.75px] shrink-0 aspect-square bg-[#111] flex items-center justify-center overflow-hidden">
         {coverUrl
           ? <img src={coverUrl} alt={titre} className="w-20 lg:w-23.5 h-20 lg:h-23.5 object-cover" />
           : <FluentMusicNote124Filled className="w-8 h-8 text-gray-600" />
@@ -143,7 +149,7 @@ function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, prev
         <div className="flex items-center gap-3">
           <button
             onClick={handlePlay}
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white shrink-0"
+            className="press w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white shrink-0"
             aria-label={playing ? "Pause" : "Lecture"}
           >
             {playing ? <FluentPause32Filled className="h-5 w-5" /> : <FluentPlay32Filled className="h-5 w-5" />}
@@ -183,10 +189,10 @@ function TrackRow({ id, titre, artiste, album, albumId, audioUrl, coverUrl, prev
 
       {/* Boutons action — masqués sur mobile */}
       <div className="hidden sm:flex flex-col gap-2 justify-center p-4 w-36 lg:w-44 shrink-0">
-        <a href={`/audioitem/${id}`} className="flex items-center justify-center bg-[#1b3a5c] hover:bg-[#163150] transition-colors text-white text-[12px] lg:text-[13px] font-bold px-4 py-2 whitespace-nowrap">
+        <a href={`/audioitem/${id}`} className="press flex items-center justify-center bg-[#1b3a5c] hover:bg-[#163150] text-white text-[12px] lg:text-[13px] font-bold px-4 py-2 whitespace-nowrap">
           Lyrics
         </a>
-        <a href={`/paiement?type=audio&id=${id}`} className="flex items-center justify-center gap-1.5 bg-[#00c853] hover:bg-[#00b548] transition-colors text-white text-[12px] lg:text-[13px] font-bold px-4 py-2 whitespace-nowrap">
+        <a href={`/paiement?type=audio&id=${id}`} className="press flex items-center justify-center gap-1.5 bg-[#00c853] hover:bg-[#00b548] text-white text-[12px] lg:text-[13px] font-bold px-4 py-2 whitespace-nowrap">
           Télécharger <DownloadIcon />
         </a>
       </div>
@@ -229,9 +235,10 @@ export default function ListeAudio() {
           </div>
         )}
         <div className="flex flex-col gap-3">
-          {visible.map((audio) => (
+          {visible.map((audio, i) => (
             <TrackRow
               key={audio.id}
+              index={i}
               id={String(audio.id)}
               titre={audio.title}
               artiste={audio.artist}

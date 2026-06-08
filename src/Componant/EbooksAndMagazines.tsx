@@ -1,6 +1,20 @@
 import { useState, useEffect } from "react";
 import Container from "./Container";
 import { api, mediaUrl, type Magazine, type Ebook } from "../lib/api";
+import { useReveal } from "../hooks/useReveal";
+
+function ItemRow({ children, index }: { children: React.ReactNode; index: number }) {
+  const { ref, visible } = useReveal<HTMLDivElement>();
+  return (
+    <div
+      ref={ref}
+      style={{ ["--reveal-delay" as any]: `${Math.min(index, 4) * 70}ms` }}
+      className={`reveal ${visible ? "is-visible" : ""} grid grid-cols-1 sm:grid-cols-4 sm:gap-6 py-6 items-start`}
+    >
+      {children}
+    </div>
+  );
+}
 
 type Props = {
   activeTab?: 'ebook' | 'magazine';
@@ -87,9 +101,9 @@ export default function EbooksAndMagazines({ activeTab: controlledTab, onTabChan
           </div>
         ) : (
           <div className="flex flex-col divide-y divide-gray-200">
-            {items.slice(0, 3).map((it) => (
-              <div key={it.id} className="grid grid-cols-1 sm:grid-cols-4 sm:gap-6 py-6 items-start">
-                <div className="shrink-0 w-full aspect-3/4 flex justify-center items-center bg-gray-100">
+            {items.slice(0, 3).map((it, i) => (
+              <ItemRow key={it.id} index={i}>
+                <div className="cover-zoom shrink-0 w-full aspect-3/4 flex justify-center items-center bg-gray-100">
                   {mediaUrl(it.cover) ? (
                     <img src={mediaUrl(it.cover)!} alt={it.title} className="w-[85%] h-full object-contain" />
                   ) : (
@@ -125,7 +139,7 @@ export default function EbooksAndMagazines({ activeTab: controlledTab, onTabChan
                     {it.pdf_preview && (
                       <a
                         href={detailHref(it.id)}
-                        className="flex items-center justify-center gap-2 bg-[#00bcd4] hover:bg-[#00acc1] transition-colors text-white text-[16px] font-bold px-4 py-2.5 whitespace-nowrap"
+                        className="press flex items-center justify-center gap-2 bg-[#00bcd4] hover:bg-[#00acc1] text-white text-[16px] font-bold px-4 py-2.5 whitespace-nowrap"
                       >
                         Lire l'aperçu
                       </a>
@@ -133,14 +147,14 @@ export default function EbooksAndMagazines({ activeTab: controlledTab, onTabChan
                     {it.price && (
                       <a
                         href={`/paiement?type=${paymentType}&id=${it.id}`}
-                        className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 transition-colors text-white text-[16px] font-bold px-4 py-2.5 whitespace-nowrap"
+                        className="press flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-[16px] font-bold px-4 py-2.5 whitespace-nowrap"
                       >
                         Acheter ({it.price.toLocaleString('fr-FR')} FCFA)
                       </a>
                     )}
                   </div>
                 </div>
-              </div>
+              </ItemRow>
             ))}
           </div>
         )}
